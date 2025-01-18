@@ -26,9 +26,9 @@ impl Service {
         let url = Url::parse_with_params(
             SONG_LINK_API_URL,
             &[
+                ("songIfSingle", "true"),
                 ("url", input.link.as_str()),
                 ("userCountry", input.user_country.as_str()),
-                ("songIfSingle", "true"),
             ],
         )?;
         let response = self.client.get(url).send().await?.error_for_status()?;
