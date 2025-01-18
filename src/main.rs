@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
 use async_graphql_axum::GraphQL;
@@ -7,10 +9,12 @@ use axum::{
     Router,
 };
 use resolver::QueryRoot;
+use service::Service;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod resolver;
+mod service;
 mod utils;
 
 async fn graphiql() -> impl IntoResponse {
@@ -27,7 +31,10 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
+    let service = Service::new().await;
+    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+        .data(Arc::new(service))
+        .finish();
 
     let app = Router::new().route("/", get(graphiql).post_service(GraphQL::new(schema)));
 
