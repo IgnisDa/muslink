@@ -7,6 +7,7 @@ use reqwest::{
 
 pub static USER_AGENT_STR: &str =
     "Muslink (https://github.com/ignisda/muslink) <ignisda2001@gmail.com>";
+pub static SONG_LINK_API_URL: &str = "https://api.song.link/v1-alpha.1/links";
 
 pub fn get_base_http_client(headers: Option<Vec<(HeaderName, HeaderValue)>>) -> reqwest::Client {
     let mut req_headers = HeaderMap::new();
