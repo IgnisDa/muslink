@@ -1,9 +1,8 @@
-[package]
-name = "muslink"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["apps/backend"]
+resolver = "2"
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "=1.0.95"
 async-graphql = "=7.0.13"
 async-graphql-axum = "=7.0.13"
