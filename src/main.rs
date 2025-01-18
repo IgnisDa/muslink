@@ -5,10 +5,10 @@ use axum::{
     routing::get,
     Router,
 };
-use service::QueryRoot;
+use resolver::QueryRoot;
 use tokio::net::TcpListener;
 
-mod service;
+mod resolver;
 
 async fn graphiql() -> impl IntoResponse {
     response::Html(GraphiQLSource::build().endpoint("/").finish())
