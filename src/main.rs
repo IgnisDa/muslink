@@ -13,6 +13,7 @@ use service::Service;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod models;
 mod resolver;
 mod service;
 mod utils;
