@@ -23,9 +23,15 @@ pub mod graphql {
     }
 
     #[derive(SimpleObject, Debug)]
+    pub struct ResolveMusicLinkResponseLinkPlatformData {
+        pub id: String,
+        pub url: String,
+    }
+
+    #[derive(SimpleObject, Debug)]
     pub struct ResolveMusicLinkResponseLink {
-        pub id: Option<String>,
         pub platform: ResolveMusicLinkResponseLinkPlatform,
+        pub data: Option<ResolveMusicLinkResponseLinkPlatformData>,
     }
 
     #[derive(SimpleObject, Debug)]
@@ -37,7 +43,7 @@ pub mod graphql {
 pub mod providers {
     use super::*;
 
-    #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+    #[derive(Debug, Hash, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(rename_all = "camelCase")]
     pub enum SongLinkPlatform {
         Spotify,
@@ -58,6 +64,12 @@ pub mod providers {
             nest! {
                 pub id: String,
                 pub platforms: Vec<SongLinkPlatform>,
+            },
+        >,
+        pub links_by_platform: HashMap<
+            SongLinkPlatform,
+            nest! {
+                pub url: String,
             },
         >,
     }

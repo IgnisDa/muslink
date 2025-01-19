@@ -7,7 +7,7 @@ use crate::{
     models::{
         graphql::{
             ResolveMusicLinkInput, ResolveMusicLinkResponse, ResolveMusicLinkResponseLink,
-            ResolveMusicLinkResponseLinkPlatform,
+            ResolveMusicLinkResponseLinkPlatform, ResolveMusicLinkResponseLinkPlatformData,
         },
         providers::{SongLinkPlatform, SongLinkResponse},
     },
@@ -65,9 +65,16 @@ impl Service {
                     .values()
                     .find(|entity| entity.platforms.contains(&sl_platform))
                     .map(|entity| entity.id.clone());
+                let url = response
+                    .links_by_platform
+                    .get(&sl_platform)
+                    .map(|link| link.url.clone());
                 ResolveMusicLinkResponseLink {
                     platform,
-                    id: platform_id,
+                    data: url.and_then(|u| {
+                        platform_id
+                            .map(|id| ResolveMusicLinkResponseLinkPlatformData { id, url: u })
+                    }),
                 }
             })
             .collect();
