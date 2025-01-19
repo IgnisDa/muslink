@@ -23,7 +23,9 @@ impl Service {
         let client = get_base_http_client(None);
         Self { client }
     }
+}
 
+impl Service {
     pub async fn resolve_music_link(
         &self,
         input: ResolveMusicLinkInput,
