@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_graphql::{Context, Object, Result};
 
-use crate::{models::ResolveMusicLinkInput, service::Service};
+use crate::{models::graphql::ResolveMusicLinkInput, service::Service};
 
 pub struct QueryRoot;
 

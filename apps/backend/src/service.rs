@@ -1,43 +1,14 @@
-use std::collections::HashMap;
-
 use async_graphql::{Error, Result};
-use nest_struct::nest_struct;
 use reqwest::{Client, Url};
 use rust_iso3166::from_alpha2;
-use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::ResolveMusicLinkInput,
+    models::{graphql::ResolveMusicLinkInput, providers::SongLinkResponse},
     utils::{get_base_http_client, SONG_LINK_API_URL},
 };
 
 pub struct Service {
     client: Client,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-enum SongLinkPlatform {
-    Spotify,
-    AppleMusic,
-    YoutubeMusic,
-    #[serde(untagged)]
-    Unknown(String),
-}
-
-#[nest_struct]
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SongLinkResponse {
-    page_url: String,
-    entity_unique_id: String,
-    entities_by_unique_id: HashMap<
-        String,
-        nest! {
-            id: String,
-            platforms: Vec<SongLinkPlatform>,
-        },
-    >,
 }
 
 impl Service {
