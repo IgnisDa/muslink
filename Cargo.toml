@@ -11,6 +11,7 @@ nest_struct = "=0.5.2"
 reqwest = { version = "=0.12.12", features = ["json", "stream"] }
 rust_iso3166 = "=0.1.14"
 serde = "=1.0.217"
+strum = { version = "=0.26.3", features = ["derive"] }
 tokio = { version = "=1.43.0", features = ["full"] }
 tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }

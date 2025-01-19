@@ -255,6 +255,7 @@ dependencies = [
  "reqwest",
  "rust_iso3166",
  "serde",
+ "strum",
  "tokio",
  "tracing",
  "tracing-subscriber",
