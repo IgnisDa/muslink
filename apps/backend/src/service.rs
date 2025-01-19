@@ -3,7 +3,10 @@ use reqwest::{Client, Url};
 use rust_iso3166::from_alpha2;
 
 use crate::{
-    models::{graphql::ResolveMusicLinkInput, providers::SongLinkResponse},
+    models::{
+        graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse},
+        providers::SongLinkResponse,
+    },
     utils::{get_base_http_client, SONG_LINK_API_URL},
 };
 
@@ -17,7 +20,10 @@ impl Service {
         Self { client }
     }
 
-    pub async fn resolve_music_link(&self, input: ResolveMusicLinkInput) -> Result<String> {
+    pub async fn resolve_music_link(
+        &self,
+        input: ResolveMusicLinkInput,
+    ) -> Result<ResolveMusicLinkResponse> {
         tracing::debug!("Received link: {:?}", input);
 
         from_alpha2(input.user_country.as_str())
@@ -38,7 +44,7 @@ impl Service {
             .await?
             .json::<SongLinkResponse>()
             .await?;
-        dbg!(response);
-        Ok("https://music.youtube.com/watch?v=dQw4w9WgXcQ".to_string())
+
+        todo!()
     }
 }

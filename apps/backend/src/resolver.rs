@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use async_graphql::{Context, Object, Result};
 
-use crate::{models::graphql::ResolveMusicLinkInput, service::Service};
+use crate::{
+    models::graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse},
+    service::Service,
+};
 
 pub struct QueryRoot;
 
@@ -12,7 +15,7 @@ impl QueryRoot {
         &self,
         gql_ctx: &Context<'_>,
         input: ResolveMusicLinkInput,
-    ) -> Result<String> {
+    ) -> Result<ResolveMusicLinkResponse> {
         let service = gql_ctx.data_unchecked::<Arc<Service>>();
         service.resolve_music_link(input).await
     }

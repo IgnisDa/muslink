@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use async_graphql::InputObject;
+use async_graphql::{Enum, InputObject, SimpleObject};
 use nest_struct::nest_struct;
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +12,24 @@ pub mod graphql {
         pub link: String,
         #[graphql(default = "US")]
         pub user_country: String,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, Enum, Clone, Copy, PartialEq, Eq)]
+    pub enum ResolveMusicLinkResponseLinkPlatform {
+        Spotify,
+        AppleMusic,
+        YoutubeMusic,
+    }
+
+    #[derive(SimpleObject, Debug)]
+    pub struct ResolveMusicLinkResponseLink {
+        pub url: Option<String>,
+        pub platform: ResolveMusicLinkResponseLinkPlatform,
+    }
+
+    #[derive(SimpleObject, Debug)]
+    pub struct ResolveMusicLinkResponse {
+        pub links: Vec<ResolveMusicLinkResponseLink>,
     }
 }
 
