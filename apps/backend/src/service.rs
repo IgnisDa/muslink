@@ -50,6 +50,7 @@ impl Service {
             .await
             .ok();
 
+        let mut found = 0;
         let collected_links = ResolveMusicLinkResponseLinkPlatform::iter()
             .map(|platform| {
                 let sl_platform = match platform {
@@ -72,18 +73,19 @@ impl Service {
                         .get(&sl_platform)
                         .map(|link| link.url.clone())
                 });
-                ResolveMusicLinkResponseLink {
-                    platform,
-                    data: url.and_then(|u| {
-                        platform_id
-                            .map(|id| ResolveMusicLinkResponseLinkPlatformData { id, url: u })
-                    }),
+                let data = url.and_then(|u| {
+                    platform_id.map(|id| ResolveMusicLinkResponseLinkPlatformData { id, url: u })
+                });
+                if data.is_some() {
+                    found += 1;
                 }
+                ResolveMusicLinkResponseLink { platform, data }
             })
             .collect();
 
         Ok(ResolveMusicLinkResponse {
-            links: collected_links,
+            found,
+            collected_links,
         })
     }
 }

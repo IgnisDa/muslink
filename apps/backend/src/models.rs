@@ -36,7 +36,8 @@ pub mod graphql {
 
     #[derive(SimpleObject, Debug)]
     pub struct ResolveMusicLinkResponse {
-        pub links: Vec<ResolveMusicLinkResponseLink>,
+        pub found: u8,
+        pub collected_links: Vec<ResolveMusicLinkResponseLink>,
     }
 }
 
