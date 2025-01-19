@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use async_graphql::{Enum, InputObject, SimpleObject};
 use nest_struct::nest_struct;
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 pub mod graphql {
     use super::*;
@@ -14,7 +15,7 @@ pub mod graphql {
         pub user_country: String,
     }
 
-    #[derive(Debug, Serialize, Deserialize, Enum, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Serialize, Deserialize, Enum, Clone, Copy, PartialEq, Eq, EnumIter)]
     pub enum ResolveMusicLinkResponseLinkPlatform {
         Spotify,
         AppleMusic,
@@ -23,7 +24,7 @@ pub mod graphql {
 
     #[derive(SimpleObject, Debug)]
     pub struct ResolveMusicLinkResponseLink {
-        pub url: Option<String>,
+        pub id: Option<String>,
         pub platform: ResolveMusicLinkResponseLinkPlatform,
     }
 
@@ -36,7 +37,7 @@ pub mod graphql {
 pub mod providers {
     use super::*;
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(rename_all = "camelCase")]
     pub enum SongLinkPlatform {
         Spotify,
@@ -55,8 +56,8 @@ pub mod providers {
         pub entities_by_unique_id: HashMap<
             String,
             nest! {
-                id: String,
-                platforms: Vec<SongLinkPlatform>,
+                pub id: String,
+                pub platforms: Vec<SongLinkPlatform>,
             },
         >,
     }

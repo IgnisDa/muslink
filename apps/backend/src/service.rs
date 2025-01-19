@@ -1,11 +1,15 @@
 use async_graphql::{Error, Result};
 use reqwest::{Client, Url};
 use rust_iso3166::from_alpha2;
+use strum::IntoEnumIterator;
 
 use crate::{
     models::{
-        graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse},
-        providers::SongLinkResponse,
+        graphql::{
+            ResolveMusicLinkInput, ResolveMusicLinkResponse, ResolveMusicLinkResponseLink,
+            ResolveMusicLinkResponseLinkPlatform,
+        },
+        providers::{SongLinkPlatform, SongLinkResponse},
     },
     utils::{get_base_http_client, SONG_LINK_API_URL},
 };
@@ -45,6 +49,31 @@ impl Service {
             .json::<SongLinkResponse>()
             .await?;
 
-        todo!()
+        let collected_links = ResolveMusicLinkResponseLinkPlatform::iter()
+            .map(|platform| {
+                let sl_platform = match platform {
+                    ResolveMusicLinkResponseLinkPlatform::Spotify => SongLinkPlatform::Spotify,
+                    ResolveMusicLinkResponseLinkPlatform::AppleMusic => {
+                        SongLinkPlatform::AppleMusic
+                    }
+                    ResolveMusicLinkResponseLinkPlatform::YoutubeMusic => {
+                        SongLinkPlatform::YoutubeMusic
+                    }
+                };
+                let platform_id = response
+                    .entities_by_unique_id
+                    .values()
+                    .find(|entity| entity.platforms.contains(&sl_platform))
+                    .map(|entity| entity.id.clone());
+                ResolveMusicLinkResponseLink {
+                    platform,
+                    id: platform_id,
+                }
+            })
+            .collect();
+
+        Ok(ResolveMusicLinkResponse {
+            links: collected_links,
+        })
     }
 }
