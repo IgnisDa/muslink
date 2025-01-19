@@ -253,6 +253,7 @@ dependencies = [
  "axum",
  "reqwest",
  "rust_iso3166",
+ "serde",
  "tokio",
  "tracing",
  "tracing-subscriber",
