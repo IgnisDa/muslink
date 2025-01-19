@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use async_graphql::{Error, Result};
+use nest_struct::nest_struct;
 use reqwest::{Client, Url};
 use rust_iso3166::from_alpha2;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     models::ResolveMusicLinkInput,
@@ -9,6 +13,31 @@ use crate::{
 
 pub struct Service {
     client: Client,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum SongLinkPlatform {
+    Spotify,
+    AppleMusic,
+    YoutubeMusic,
+    #[serde(untagged)]
+    Unknown(String),
+}
+
+#[nest_struct]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SongLinkResponse {
+    page_url: String,
+    entity_unique_id: String,
+    entities_by_unique_id: HashMap<
+        String,
+        nest! {
+            id: String,
+            platforms: Vec<SongLinkPlatform>,
+        },
+    >,
 }
 
 impl Service {
@@ -31,8 +60,14 @@ impl Service {
                 ("userCountry", input.user_country.as_str()),
             ],
         )?;
-        let response = self.client.get(url).send().await?.error_for_status()?;
-        dbg!(response.text().await?);
+        let response = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .json::<SongLinkResponse>()
+            .await?;
+        dbg!(response);
         Ok("https://music.youtube.com/watch?v=dQw4w9WgXcQ".to_string())
     }
 }
