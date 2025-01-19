@@ -83,9 +83,12 @@ impl Service {
             })
             .collect();
 
-        Ok(ResolveMusicLinkResponse {
+        let response = ResolveMusicLinkResponse {
             found,
             collected_links,
-        })
+        };
+
+        tracing::debug!("Returning response {:?}", response);
+        Ok(response)
     }
 }
