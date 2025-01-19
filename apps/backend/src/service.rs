@@ -47,7 +47,8 @@ impl Service {
             .send()
             .await?
             .json::<SongLinkResponse>()
-            .await?;
+            .await
+            .ok();
 
         let collected_links = ResolveMusicLinkResponseLinkPlatform::iter()
             .map(|platform| {
@@ -60,15 +61,17 @@ impl Service {
                         SongLinkPlatform::YoutubeMusic
                     }
                 };
-                let platform_id = response
-                    .entities_by_unique_id
-                    .values()
-                    .find(|entity| entity.platforms.contains(&sl_platform))
-                    .map(|entity| entity.id.clone());
-                let url = response
-                    .links_by_platform
-                    .get(&sl_platform)
-                    .map(|link| link.url.clone());
+                let platform_id = response.as_ref().and_then(|resp| {
+                    resp.entities_by_unique_id
+                        .values()
+                        .find(|entity| entity.platforms.contains(&sl_platform))
+                        .map(|entity| entity.id.clone())
+                });
+                let url = response.as_ref().and_then(|resp| {
+                    resp.links_by_platform
+                        .get(&sl_platform)
+                        .map(|link| link.url.clone())
+                });
                 ResolveMusicLinkResponseLink {
                     platform,
                     data: url.and_then(|u| {
