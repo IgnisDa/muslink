@@ -11,7 +11,34 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  pre-workflow-checks:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.set_outputs.outputs.should-run }}
+    steps:
+      - name: Set outputs
+        id: set_outputs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let shouldRun = 'false';
+            if (context.eventName === "push") {
+              shouldRun = 'true';
+            } else if (context.eventName === "pull_request") {
+              const commitMsg = await github.rest.repos.getCommit({
+                repo: context.repo.repo,
+                owner: context.repo.owner,
+                ref: context.payload.pull_request.head.sha
+              }).then(commit => commit.data.commit.message);
+              if (commitMsg.includes("Run CI")) {
+                shouldRun = 'true';
+              }
+            }
+            core.setOutput('should-run', shouldRun);
+
   build-and-push:
+    needs: pre-workflow-checks
+    if: needs.pre-workflow-checks.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
