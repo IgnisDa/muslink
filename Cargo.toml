@@ -1,6 +1,17 @@
-[package]
-name = "muslink"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["apps/backend"]
+resolver = "2"
 
-[dependencies]
+[workspace.dependencies]
+anyhow = "=1.0.95"
+async-graphql = "=7.0.13"
+async-graphql-axum = "=7.0.13"
+axum = "=0.7.9"
+nest_struct = "=0.5.2"
+reqwest = { version = "=0.12.12", features = ["json", "stream"] }
+rust_iso3166 = "=0.1.14"
+serde = "=1.0.217"
+strum = { version = "=0.26.3", features = ["derive"] }
+tokio = { version = "=1.43.0", features = ["full"] }
+tracing = "=0.1.41"
+tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
