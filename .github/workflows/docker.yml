@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should-run: ${{ steps.set_outputs.outputs.should-run }}
+      should-release: ${{ steps.set_outputs.outputs.should-release }}
     steps:
       - name: Set outputs
         id: set_outputs
@@ -35,6 +36,9 @@ jobs:
               }
             }
             core.setOutput('should-run', shouldRun);
+
+            const shouldRelease = (context.eventName === "push" && context.ref.startsWith("refs/tags/")) ? 'true' : 'false';
+            core.setOutput('should-release', shouldRelease);
 
   build-and-push:
     needs: pre-workflow-checks
@@ -65,11 +69,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
-            type=ref,event=pr,enable=${{ contains(github.event.head_commit.message, 'Run CI') }}
-            type=sha,format=long
+            type=sha
+            type=ref,event=pr
+            type=raw,value=develop,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ needs.pre-workflow-checks.outputs.should-release == 'true' }}
+            type=semver,pattern=v{{major}},enable=${{ needs.pre-workflow-checks.outputs.should-release == 'true' }}
+            type=semver,pattern=v{{version}},enable=${{ needs.pre-workflow-checks.outputs.should-release == 'true' }}
+            type=semver,pattern=v{{major}}.{{minor}},enable=${{ needs.pre-workflow-checks.outputs.should-release == 'true' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
