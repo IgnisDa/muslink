@@ -27,9 +27,14 @@ struct AppConfig {
 )]
 struct ResolveMusicLink;
 
-async fn process_message(text: String, config: &AppConfig) -> Option<String> {
+async fn process_message(text: String, config: &AppConfig) -> (Option<String>, bool) {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
-    let url = url_regex.find(&text)?;
+    let has_url = url_regex.is_match(&text);
+    let url = url_regex.find(&text);
+
+    let Some(url) = url else {
+        return (None, has_url);
+    };
 
     let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
         input: resolve_music_link::ResolveMusicLinkInput {
@@ -59,7 +64,7 @@ async fn process_message(text: String, config: &AppConfig) -> Option<String> {
         });
 
     if data.resolve_music_link.found == 0 {
-        return None;
+        return (None, has_url);
     }
 
     let links = data
@@ -74,7 +79,7 @@ async fn process_message(text: String, config: &AppConfig) -> Option<String> {
         .collect::<Vec<_>>()
         .join("\n");
 
-    Some(format!("Found links:\n\n{}", links))
+    (Some(format!("Found links:\n\n{}", links)), has_url)
 }
 
 #[tokio::main]
@@ -88,11 +93,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
             let text = msg.text().unwrap_or_default();
-            if let Some(response) = process_message(text.to_string(), &config).await {
+            let (response, has_url) = process_message(text.to_string(), &config).await;
+
+            if let Some(response) = response {
                 bot.send_message(msg.chat.id, response)
                     .reply_parameters(ReplyParameters::new(msg.id))
                     .await?;
-            } else {
+            } else if has_url {
                 bot.set_message_reaction(msg.chat.id, msg.id)
                     .reaction(vec![ReactionType::Emoji {
                         emoji: "😢".to_string(),
