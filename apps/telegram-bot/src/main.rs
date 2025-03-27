@@ -9,10 +9,10 @@ use teloxide::prelude::*;
 #[derive(Config)]
 #[config(env)]
 struct AppConfig {
-    #[setting(validate = not_empty, env = "MUSLINK_API_BASE_URL")]
-    muslink_api_base_url: String,
     #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
     teloxide_token: String,
+    #[setting(validate = not_empty, env = "MUSLINK_API_BASE_URL")]
+    muslink_api_base_url: String,
 }
 
 #[derive(GraphQLQuery)]
