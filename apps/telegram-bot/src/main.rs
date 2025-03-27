@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use graphql_client::GraphQLQuery;
 use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
@@ -27,33 +29,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = ConfigLoader::<AppConfig>::new().load()?.config;
 
-    let bot = Bot::new(config.teloxide_token);
+    let bot = Bot::new(config.teloxide_token.clone());
 
-    teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-        let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
-            input: resolve_music_link::ResolveMusicLinkInput {
-                link: "https://music.youtube.com/watch?v=dTdO8_aWR-g&si=tU4IJLFktsnq_j7I".into(),
-                ..Default::default()
-            },
-        });
+    let handler = Update::filter_message().endpoint(
+        |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
+            let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
+                input: resolve_music_link::ResolveMusicLinkInput {
+                    link: "https://music.youtube.com/watch?v=dTdO8_aWR-g&si=tU4IJLFktsnq_j7I"
+                        .into(),
+                    ..Default::default()
+                },
+            });
 
-        let client = Client::new();
-        let response = client
-            .post(config.muslink_api_base_url)
-            .json(&resolve_music_link)
-            .send()
-            .await
-            .unwrap()
-            .json::<resolve_music_link::ResponseData>()
-            .await
-            .unwrap();
+            let client = Client::new();
+            let response = client
+                .post(config.muslink_api_base_url.clone())
+                .json(&resolve_music_link)
+                .send()
+                .await
+                .unwrap()
+                .json::<resolve_music_link::ResponseData>()
+                .await
+                .unwrap();
 
-        println!("{:?}", response);
+            println!("{:?}", response);
 
-        bot.send_message(msg.chat.id, "Hello, world!").await?;
-        Ok(())
-    })
-    .await;
+            bot.send_message(msg.chat.id, "Hello, world!").await?;
+
+            respond(())
+        },
+    );
+
+    Dispatcher::builder(bot, handler)
+        .dependencies(dptree::deps![Arc::new(config)])
+        .enable_ctrlc_handler()
+        .build()
+        .dispatch()
+        .await;
 
     Ok(())
 }
