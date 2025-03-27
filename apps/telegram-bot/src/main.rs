@@ -43,6 +43,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .json(&resolve_music_link)
             .send()
             .await
+            .unwrap()
+            .json::<resolve_music_link::ResponseData>()
+            .await
             .unwrap();
 
         println!("{:?}", response);
