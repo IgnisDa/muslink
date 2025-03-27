@@ -2601,6 +2601,7 @@ name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
  "cynic",
+ "cynic-codegen",
  "dotenvy",
  "teloxide",
  "tokio",

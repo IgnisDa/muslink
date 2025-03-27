@@ -8,3 +8,6 @@ cynic = { workspace = true }
 dotenvy = { workspace = true }
 teloxide = { workspace = true }
 tokio = { workspace = true }
+
+[build-dependencies]
+cynic-codegen = { workspace = true }
