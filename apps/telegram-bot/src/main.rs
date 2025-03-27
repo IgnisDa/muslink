@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use graphql_client::GraphQLQuery;
+use graphql_client::{GraphQLQuery, Response};
 use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::prelude::*;
@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .send()
                 .await
                 .unwrap()
-                .json::<resolve_music_link::ResponseData>()
+                .json::<Response<resolve_music_link::ResponseData>>()
                 .await
                 .unwrap();
 
