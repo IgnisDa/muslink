@@ -2693,6 +2693,7 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "graphql_client",
+ "reqwest 0.12.12",
  "schematic",
  "serde",
  "teloxide",
