@@ -6,7 +6,8 @@ use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
-    types::{ReactionType, ReplyParameters},
+    types::{ParseMode, ReactionType, ReplyParameters},
+    utils::markdown::link,
 };
 
 #[derive(Config)]
@@ -71,15 +72,13 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
                 .resolve_music_link
                 .collected_links
                 .iter()
-                .map(|link| {
-                    let platform = format!("{:?}", link.platform);
-                    format!(
-                        "[{}]({})",
-                        platform,
-                        link.data
-                            .as_ref()
-                            .map_or_else(String::new, |data| data.url.clone())
-                    )
+                .map(|api_link| {
+                    let platform = format!("{:?}", api_link.platform);
+                    let url = api_link
+                        .data
+                        .as_ref()
+                        .map_or_else(String::new, |data| data.url.clone());
+                    link(&url, &platform)
                 })
                 .collect();
 
@@ -112,7 +111,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(response) => {
                     bot.send_message(msg.chat.id, response)
                         .reply_parameters(ReplyParameters::new(msg.id))
-                        .await?;
+                        .parse_mode(ParseMode::MarkdownV2)
+                        .await
+                        .unwrap();
                 }
                 Err(has_url) if has_url => {
                     bot.set_message_reaction(msg.chat.id, msg.id)
