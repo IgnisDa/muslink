@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use graphql_client::{GraphQLQuery, Response};
+use regex::Regex;
 use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::prelude::*;
@@ -8,10 +9,10 @@ use teloxide::prelude::*;
 #[derive(Config)]
 #[config(env)]
 struct AppConfig {
-    #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
-    teloxide_token: String,
     #[setting(validate = not_empty, env = "MUSLINK_API_BASE_URL")]
     muslink_api_base_url: String,
+    #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
+    teloxide_token: String,
 }
 
 #[derive(GraphQLQuery)]
@@ -24,9 +25,12 @@ struct AppConfig {
 struct ResolveMusicLink;
 
 async fn process_message(text: String, config: &AppConfig) -> Option<String> {
+    let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
+    let url = url_regex.find(&text)?;
+
     let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
         input: resolve_music_link::ResolveMusicLinkInput {
-            link: text,
+            link: url.as_str().to_string(),
             ..Default::default()
         },
     });
