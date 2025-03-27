@@ -23,6 +23,53 @@ struct AppConfig {
 )]
 struct ResolveMusicLink;
 
+async fn process_message(text: String, config: &AppConfig) -> Option<String> {
+    let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
+        input: resolve_music_link::ResolveMusicLinkInput {
+            link: text,
+            ..Default::default()
+        },
+    });
+
+    let client = Client::new();
+    let response = client
+        .post(config.muslink_api_base_url.clone())
+        .json(&resolve_music_link)
+        .send()
+        .await
+        .unwrap()
+        .json::<Response<resolve_music_link::ResponseData>>()
+        .await
+        .unwrap();
+
+    let data = response
+        .data
+        .unwrap_or_else(|| resolve_music_link::ResponseData {
+            resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
+                found: 0,
+                collected_links: vec![],
+            },
+        });
+
+    if data.resolve_music_link.found == 0 {
+        return None;
+    }
+
+    let links = data
+        .resolve_music_link
+        .collected_links
+        .iter()
+        .filter_map(|link| {
+            link.data
+                .as_ref()
+                .map(|data| format!("{:?}: {}", link.platform, data.url))
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    Some(format!("Found links:\n\n{}", links))
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv()?;
@@ -34,52 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
             let text = msg.text().unwrap_or_default();
-            let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
-                input: resolve_music_link::ResolveMusicLinkInput {
-                    link: text.into(),
-                    ..Default::default()
-                },
-            });
-
-            let client = Client::new();
-            let response = client
-                .post(config.muslink_api_base_url.clone())
-                .json(&resolve_music_link)
-                .send()
-                .await
-                .unwrap()
-                .json::<Response<resolve_music_link::ResponseData>>()
-                .await
-                .unwrap();
-
-            let data = response
-                .data
-                .unwrap_or_else(|| resolve_music_link::ResponseData {
-                    resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
-                        found: 0,
-                        collected_links: vec![],
-                    },
-                });
-
-            if data.resolve_music_link.found == 0 {
-                return respond(());
+            if let Some(response) = process_message(text.to_string(), &config).await {
+                bot.send_message(msg.chat.id, response).await?;
             }
-
-            let links = data
-                .resolve_music_link
-                .collected_links
-                .iter()
-                .filter_map(|link| {
-                    link.data
-                        .as_ref()
-                        .map(|data| format!("{:?}: {}", link.platform, data.url))
-                })
-                .collect::<Vec<_>>()
-                .join("\n");
-
-            bot.send_message(msg.chat.id, format!("Found links:\n{}", links))
-                .await?;
-
             respond(())
         },
     );
