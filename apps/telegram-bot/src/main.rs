@@ -33,10 +33,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
+            let text = msg.text().unwrap_or_default();
             let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
                 input: resolve_music_link::ResolveMusicLinkInput {
-                    link: "https://music.youtube.com/watch?v=dTdO8_aWR-g&si=tU4IJLFktsnq_j7I"
-                        .into(),
+                    link: text.into(),
                     ..Default::default()
                 },
             });
@@ -52,9 +52,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .await
                 .unwrap();
 
-            println!("{:?}", response);
+            let data = response
+                .data
+                .unwrap_or_else(|| resolve_music_link::ResponseData {
+                    resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
+                        found: 0,
+                        collected_links: vec![],
+                    },
+                });
 
-            bot.send_message(msg.chat.id, "Hello, world!").await?;
+            if data.resolve_music_link.found == 0 {
+                return respond(());
+            }
+
+            let links = data
+                .resolve_music_link
+                .collected_links
+                .iter()
+                .filter_map(|link| {
+                    link.data
+                        .as_ref()
+                        .map(|data| format!("{:?}: {}", link.platform, data.url))
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+
+            bot.send_message(msg.chat.id, format!("Found links:\n{}", links))
+                .await?;
 
             respond(())
         },
