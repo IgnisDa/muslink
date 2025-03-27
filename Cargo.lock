@@ -2423,6 +2423,7 @@ name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
  "teloxide",
+ "tokio",
 ]
 
 [[package]]
