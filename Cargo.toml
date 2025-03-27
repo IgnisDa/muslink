@@ -16,7 +16,12 @@ reqwest = { version = "=0.12.12", default-features = false, features = [
   "rustls-tls",
 ] }
 rust_iso3166 = "=0.1.14"
-serde = "=1.0.217"
+schematic = { version = "=0.18.1", features = [
+  "config",
+  "env",
+  "validate",
+], default-features = false }
+serde = "=1.0.219"
 strum = { version = "=0.26.3", features = ["derive"] }
 teloxide = { version = "0.13", features = ["macros"] }
 tokio = { version = "=1.43.0", features = ["full"] }
