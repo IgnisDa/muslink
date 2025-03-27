@@ -7,6 +7,7 @@ edition = "2024"
 dotenvy = { workspace = true }
 dptree = { workspace = true }
 graphql_client = { workspace = true }
+regex = { workspace = true }
 reqwest = { workspace = true }
 schematic = { workspace = true }
 serde = { workspace = true }
