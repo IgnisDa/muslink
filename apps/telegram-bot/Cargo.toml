@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 dotenvy = { workspace = true }
 graphql_client = { workspace = true }
+serde = { workspace = true }
 teloxide = { workspace = true }
 tokio = { workspace = true }

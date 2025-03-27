@@ -1,4 +1,13 @@
+use graphql_client::GraphQLQuery;
 use teloxide::prelude::*;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "../../libs/generated/backend-schema.graphql",
+    query_path = "../../libs/graphql/queries/resolve_music_link.graphql",
+    response_derives = "Debug"
+)]
+struct ResolveMusicLink;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
