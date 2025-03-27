@@ -1,0 +1,12 @@
+query ResolveMusicLink($input: ResolveMusicLinkInput!) {
+  resolveMusicLink(input: $input) {
+    found
+    collectedLinks {
+      platform
+      data {
+        id
+        url
+      }
+    }
+  }
+}
