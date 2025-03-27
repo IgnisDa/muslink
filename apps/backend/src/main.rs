@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new().route("/", get(graphiql).post_service(GraphQL::new(schema)));
 
-    let listener = TcpListener::bind(format!("0.0.0.0:5000")).await.unwrap();
+    let listener = TcpListener::bind("0.0.0.0:5000".to_string()).await.unwrap();
     tracing::info!("Listening on {}", listener.local_addr()?);
     axum::serve(listener, app).await.unwrap();
     Ok(())

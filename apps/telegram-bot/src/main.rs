@@ -74,10 +74,7 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
                 .iter()
                 .filter_map(|api_link| {
                     let platform = format!("{:?}", api_link.platform);
-                    match api_link.data.as_ref() {
-                        None => None,
-                        Some(data) => Some(link(&data.url, &platform)),
-                    }
+                    api_link.data.as_ref().map(|data| link(&data.url, &platform))
                 })
                 .collect();
 
