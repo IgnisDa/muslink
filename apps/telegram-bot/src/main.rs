@@ -83,7 +83,7 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
                 .collect();
 
             if !response.is_empty() {
-                response.push('\n');
+                response.push_str("\n\n");
             }
             response.push_str(&format!("for {}\n{}", url.as_str(), platforms.join(", ")));
         }
