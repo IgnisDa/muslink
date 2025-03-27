@@ -2692,6 +2692,7 @@ name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
  "dotenvy",
+ "dptree",
  "graphql_client",
  "reqwest 0.12.12",
  "schematic",

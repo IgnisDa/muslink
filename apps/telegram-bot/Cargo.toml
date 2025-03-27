@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 dotenvy = { workspace = true }
+dptree = { workspace = true }
 graphql_client = { workspace = true }
 reqwest = { workspace = true }
 schematic = { workspace = true }
