@@ -1,4 +1,5 @@
 use graphql_client::GraphQLQuery;
+use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::prelude::*;
 
@@ -15,6 +16,7 @@ struct AppConfig {
 #[graphql(
     schema_path = "../../libs/generated/backend-schema.graphql",
     query_path = "../../libs/graphql/queries/resolve_music_link.graphql",
+    variables_derives = "Debug, Default",
     response_derives = "Debug"
 )]
 struct ResolveMusicLink;
@@ -28,6 +30,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Bot::new(config.teloxide_token);
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
+        let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
+            input: resolve_music_link::ResolveMusicLinkInput {
+                link: "https://music.youtube.com/watch?v=dTdO8_aWR-g&si=tU4IJLFktsnq_j7I".into(),
+                ..Default::default()
+            },
+        });
+
+        let client = Client::new();
+        let response = client
+            .post(config.muslink_api_base_url)
+            .json(&resolve_music_link)
+            .send()
+            .await
+            .unwrap();
+
+        println!("{:?}", response);
+
         bot.send_message(msg.chat.id, "Hello, world!").await?;
         Ok(())
     })
