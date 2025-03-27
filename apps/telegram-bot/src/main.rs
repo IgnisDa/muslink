@@ -27,13 +27,13 @@ struct AppConfig {
 )]
 struct ResolveMusicLink;
 
-async fn process_message(text: String, config: &AppConfig) -> (Option<String>, bool) {
+async fn process_message(text: String, config: &AppConfig) -> Result<String, bool> {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
     let url = url_regex.find(&text);
 
     let Some(url) = url else {
-        return (None, has_url);
+        return Err(has_url);
     };
 
     let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
@@ -64,7 +64,7 @@ async fn process_message(text: String, config: &AppConfig) -> (Option<String>, b
         });
 
     if data.resolve_music_link.found == 0 {
-        return (None, has_url);
+        return Err(has_url);
     }
 
     let links = data
@@ -79,7 +79,7 @@ async fn process_message(text: String, config: &AppConfig) -> (Option<String>, b
         .collect::<Vec<_>>()
         .join("\n");
 
-    (Some(format!("Found links:\n\n{}", links)), has_url)
+    Ok(format!("Found links:\n\n{}", links))
 }
 
 #[tokio::main]
@@ -93,18 +93,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
             let text = msg.text().unwrap_or_default();
-            let (response, has_url) = process_message(text.to_string(), &config).await;
-
-            if let Some(response) = response {
-                bot.send_message(msg.chat.id, response)
-                    .reply_parameters(ReplyParameters::new(msg.id))
-                    .await?;
-            } else if has_url {
-                bot.set_message_reaction(msg.chat.id, msg.id)
-                    .reaction(vec![ReactionType::Emoji {
-                        emoji: "😢".to_string(),
-                    }])
-                    .await?;
+            match process_message(text.to_string(), &config).await {
+                Ok(response) => {
+                    bot.send_message(msg.chat.id, response)
+                        .reply_parameters(ReplyParameters::new(msg.id))
+                        .await?;
+                }
+                Err(has_url) if has_url => {
+                    bot.set_message_reaction(msg.chat.id, msg.id)
+                        .reaction(vec![ReactionType::Emoji {
+                            emoji: "😢".to_string(),
+                        }])
+                        .await?;
+                }
+                _ => {}
             }
             respond(())
         },
