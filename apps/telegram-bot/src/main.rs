@@ -72,13 +72,12 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
                 .resolve_music_link
                 .collected_links
                 .iter()
-                .map(|api_link| {
+                .filter_map(|api_link| {
                     let platform = format!("{:?}", api_link.platform);
-                    let url = api_link
-                        .data
-                        .as_ref()
-                        .map_or_else(String::new, |data| data.url.clone());
-                    link(&url, &platform)
+                    match api_link.data.as_ref() {
+                        None => None,
+                        Some(data) => Some(link(&data.url, &platform)),
+                    }
                 })
                 .collect();
 
