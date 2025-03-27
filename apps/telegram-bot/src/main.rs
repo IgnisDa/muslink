@@ -4,7 +4,10 @@ use graphql_client::{GraphQLQuery, Response};
 use regex::Regex;
 use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
-use teloxide::{prelude::*, types::ReplyParameters};
+use teloxide::{
+    prelude::*,
+    types::{ReactionType, ReplyParameters},
+};
 
 #[derive(Config)]
 #[config(env)]
@@ -88,6 +91,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(response) = process_message(text.to_string(), &config).await {
                 bot.send_message(msg.chat.id, response)
                     .reply_parameters(ReplyParameters::new(msg.id))
+                    .await?;
+            } else {
+                bot.set_message_reaction(msg.chat.id, msg.id)
+                    .reaction(vec![ReactionType::Emoji {
+                        emoji: "😢".to_string(),
+                    }])
                     .await?;
             }
             respond(())
