@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use convert_case::{Case, Casing};
 use graphql_client::{GraphQLQuery, Response};
 use regex::Regex;
 use reqwest::Client;
@@ -73,8 +74,11 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
                 .collected_links
                 .iter()
                 .filter_map(|api_link| {
-                    let platform = format!("{:?}", api_link.platform);
-                    api_link.data.as_ref().map(|data| link(&data.url, &platform))
+                    let platform = format!("{:?}", api_link.platform).to_case(Case::Title);
+                    api_link
+                        .data
+                        .as_ref()
+                        .map(|data| link(&data.url, &platform))
                 })
                 .collect();
 
