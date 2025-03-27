@@ -4,7 +4,7 @@ use graphql_client::{GraphQLQuery, Response};
 use regex::Regex;
 use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
-use teloxide::prelude::*;
+use teloxide::{prelude::*, types::ReplyParameters};
 
 #[derive(Config)]
 #[config(env)]
@@ -86,7 +86,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
             let text = msg.text().unwrap_or_default();
             if let Some(response) = process_message(text.to_string(), &config).await {
-                bot.send_message(msg.chat.id, response).await?;
+                bot.send_message(msg.chat.id, response)
+                    .reply_parameters(ReplyParameters::new(msg.id))
+                    .await?;
             }
             respond(())
         },
