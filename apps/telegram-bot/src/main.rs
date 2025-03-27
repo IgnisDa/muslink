@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use convert_case::{Case, Casing};
@@ -32,7 +33,10 @@ struct ResolveMusicLink;
 async fn process_message(text: String, config: &AppConfig) -> Result<String, bool> {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
-    let urls: Vec<_> = url_regex.find_iter(&text).collect();
+    let urls: HashSet<_> = url_regex
+        .find_iter(&text)
+        .map(|m| m.as_str().to_string())
+        .collect();
 
     if urls.is_empty() {
         return Err(has_url);
@@ -44,7 +48,7 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
     for url in urls {
         let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
             input: resolve_music_link::ResolveMusicLinkInput {
-                link: url.as_str().to_string(),
+                link: url.clone(),
                 ..Default::default()
             },
         });
@@ -85,7 +89,7 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
             if !response.is_empty() {
                 response.push_str("\n\n");
             }
-            response.push_str(&format!("for {}\n{}", url.as_str(), platforms.join(", ")));
+            response.push_str(&format!("for {}\n{}", url, platforms.join(", ")));
         }
     }
 
