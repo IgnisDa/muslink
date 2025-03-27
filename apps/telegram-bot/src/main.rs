@@ -30,56 +30,71 @@ struct ResolveMusicLink;
 async fn process_message(text: String, config: &AppConfig) -> Result<String, bool> {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
-    let url = url_regex.find(&text);
+    let urls: Vec<_> = url_regex.find_iter(&text).collect();
 
-    let Some(url) = url else {
-        return Err(has_url);
-    };
-
-    let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
-        input: resolve_music_link::ResolveMusicLinkInput {
-            link: url.as_str().to_string(),
-            ..Default::default()
-        },
-    });
-
-    let client = Client::new();
-    let response = client
-        .post(config.muslink_api_base_url.clone())
-        .json(&resolve_music_link)
-        .send()
-        .await
-        .unwrap()
-        .json::<Response<resolve_music_link::ResponseData>>()
-        .await
-        .unwrap();
-
-    let data = response
-        .data
-        .unwrap_or_else(|| resolve_music_link::ResponseData {
-            resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
-                found: 0,
-                collected_links: vec![],
-            },
-        });
-
-    if data.resolve_music_link.found == 0 {
+    if urls.is_empty() {
         return Err(has_url);
     }
 
-    let links = data
-        .resolve_music_link
-        .collected_links
-        .iter()
-        .filter_map(|link| {
-            link.data
-                .as_ref()
-                .map(|data| format!("{:?}: {}", link.platform, data.url))
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let mut response = String::new();
+    let client = Client::new();
 
-    Ok(format!("Found links:\n\n{}", links))
+    for url in urls {
+        let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
+            input: resolve_music_link::ResolveMusicLinkInput {
+                link: url.as_str().to_string(),
+                ..Default::default()
+            },
+        });
+
+        let response_data = client
+            .post(config.muslink_api_base_url.clone())
+            .json(&resolve_music_link)
+            .send()
+            .await
+            .unwrap()
+            .json::<Response<resolve_music_link::ResponseData>>()
+            .await
+            .unwrap();
+
+        let data = response_data
+            .data
+            .unwrap_or_else(|| resolve_music_link::ResponseData {
+                resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
+                    found: 0,
+                    collected_links: vec![],
+                },
+            });
+
+        if data.resolve_music_link.found > 0 {
+            let platforms: Vec<_> = data
+                .resolve_music_link
+                .collected_links
+                .iter()
+                .map(|link| {
+                    let platform = format!("{:?}", link.platform);
+                    format!(
+                        "[{}]({})",
+                        platform,
+                        link.data
+                            .as_ref()
+                            .map_or_else(String::new, |data| data.url.clone())
+                    )
+                })
+                .collect();
+
+            if !response.is_empty() {
+                response.push('\n');
+            }
+            response.push_str(&format!("for {}\n{}", url.as_str(), platforms.join(", ")));
+        }
+    }
+
+    if response.is_empty() {
+        return Err(has_url);
+    }
+
+    Ok(response)
 }
 
 #[tokio::main]
