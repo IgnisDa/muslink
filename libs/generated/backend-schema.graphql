@@ -1,0 +1,33 @@
+schema {
+  query: QueryRoot
+}
+type QueryRoot {
+  resolveMusicLink(input: ResolveMusicLinkInput!): ResolveMusicLinkResponse!
+}
+
+input ResolveMusicLinkInput {
+  link: String!
+  userCountry: String! = "US"
+}
+
+type ResolveMusicLinkResponse {
+  found: Int!
+  collectedLinks: [ResolveMusicLinkResponseLink!]!
+}
+
+type ResolveMusicLinkResponseLink {
+  platform: ResolveMusicLinkResponseLinkPlatform!
+  data: ResolveMusicLinkResponseLinkPlatformData
+}
+
+enum ResolveMusicLinkResponseLinkPlatform {
+  SPOTIFY
+  APPLE_MUSIC
+  YOUTUBE_MUSIC
+}
+
+type ResolveMusicLinkResponseLinkPlatformData {
+  id: String!
+  url: String!
+}
+

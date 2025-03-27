@@ -1,0 +1,16 @@
+[package]
+name = "telegram-bot"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+convert_case = { workspace = true }
+dotenvy = { workspace = true }
+dptree = { workspace = true }
+graphql_client = { workspace = true }
+regex = { workspace = true }
+reqwest = { workspace = true }
+schematic = { workspace = true }
+serde = { workspace = true }
+teloxide = { workspace = true }
+tokio = { workspace = true }
