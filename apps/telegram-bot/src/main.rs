@@ -7,7 +7,7 @@ use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
     types::{ParseMode, ReactionType, ReplyParameters},
-    utils::markdown::link,
+    utils::html::link,
 };
 
 #[derive(Config)]
@@ -111,9 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(response) => {
                     bot.send_message(msg.chat.id, response)
                         .reply_parameters(ReplyParameters::new(msg.id))
-                        .parse_mode(ParseMode::MarkdownV2)
-                        .await
-                        .unwrap();
+                        .parse_mode(ParseMode::Html)
+                        .await?;
                 }
                 Err(has_url) if has_url => {
                     bot.set_message_reaction(msg.chat.id, msg.id)
