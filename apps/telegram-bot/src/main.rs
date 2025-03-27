@@ -7,7 +7,7 @@ use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
-    types::{ParseMode, ReactionType, ReplyParameters},
+    types::{LinkPreviewOptions, ParseMode, ReactionType, ReplyParameters},
     utils::html::link,
 };
 
@@ -112,6 +112,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     bot.send_message(msg.chat.id, response)
                         .reply_parameters(ReplyParameters::new(msg.id))
                         .parse_mode(ParseMode::Html)
+                        .link_preview_options(LinkPreviewOptions {
+                            url: None,
+                            is_disabled: true,
+                            show_above_text: false,
+                            prefer_large_media: false,
+                            prefer_small_media: false,
+                        })
                         .await?;
                 }
                 Err(has_url) if has_url => {
