@@ -9,8 +9,8 @@ use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
     sugar::request::RequestLinkPreviewExt,
-    types::{ParseMode, ReactionType},
-    utils::html::link,
+    types::{ParseMode, ReactionType, User},
+    utils::html::{link, user_mention},
 };
 
 #[derive(Config)]
@@ -31,7 +31,11 @@ struct AppConfig {
 )]
 struct ResolveMusicLink;
 
-async fn process_message(text: String, config: &AppConfig) -> Result<String, bool> {
+async fn process_message(
+    text: String,
+    config: &AppConfig,
+    user: Option<User>,
+) -> Result<String, bool> {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
     let urls: HashSet<_> = url_regex
@@ -98,6 +102,13 @@ async fn process_message(text: String, config: &AppConfig) -> Result<String, boo
         return Err(has_url);
     }
 
+    if let Some(user) = user {
+        let username = user
+            .mention()
+            .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
+        response.push_str(&format!("\n\nPosted by {}", username));
+    }
+
     Ok(response)
 }
 
@@ -113,7 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
             let text = msg.text().unwrap_or_default();
-            match process_message(text.to_string(), &config).await {
+            match process_message(text.to_string(), &config, msg.from).await {
                 Ok(response) => {
                     bot.send_message(msg.chat.id, response)
                         .parse_mode(ParseMode::Html)
