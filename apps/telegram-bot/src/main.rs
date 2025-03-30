@@ -8,6 +8,7 @@ use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
+    sugar::request::RequestReplyExt,
     types::{LinkPreviewOptions, ParseMode, ReactionType, ReplyParameters},
     utils::html::link,
 };
@@ -115,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match process_message(text.to_string(), &config).await {
                 Ok(response) => {
                     bot.send_message(msg.chat.id, response)
-                        .reply_parameters(ReplyParameters::new(msg.id))
+                        .reply_to(msg.id)
                         .parse_mode(ParseMode::Html)
                         .link_preview_options(LinkPreviewOptions {
                             url: None,
