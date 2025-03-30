@@ -8,7 +8,6 @@ use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use teloxide::{
     prelude::*,
-    sugar::request::RequestLinkPreviewExt,
     types::{ParseMode, ReactionType, User},
     utils::html::{link, user_mention},
 };
@@ -128,7 +127,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(response) => {
                     bot.send_message(msg.chat.id, response)
                         .parse_mode(ParseMode::Html)
-                        .disable_link_preview(true)
                         .await?;
                     bot.delete_message(msg.chat.id, msg.id).await?;
                 }
