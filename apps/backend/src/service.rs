@@ -16,16 +16,13 @@ impl Service {
         &self,
         input: ResolveMusicLinkInput,
     ) -> Result<ResolveMusicLinkResponse> {
-        // Convert from GraphQL model to service model
         let service_input = service::MusicLinkInput {
             link: input.link,
             user_country: input.user_country,
         };
 
-        // Call the service function
         let result = self.link_service.resolve_music_link(service_input).await?;
 
-        // Convert back to GraphQL model
         let response = crate::models::convert_to_graphql_response(result);
 
         tracing::debug!("Returning GraphQL response");
