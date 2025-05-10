@@ -10,5 +10,6 @@ dptree = { workspace = true }
 regex = { workspace = true }
 schematic = { workspace = true }
 service = { path = "../../libs/service" }
+serde = { workspace = true }
 teloxide = { workspace = true }
 tokio = { workspace = true }
