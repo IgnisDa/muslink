@@ -2,10 +2,9 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use convert_case::{Case, Casing};
-use graphql_client::{GraphQLQuery, Response};
 use regex::Regex;
-use reqwest::Client;
 use schematic::{Config, ConfigLoader, validate::not_empty};
+use service::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     prelude::*,
     types::{ParseMode, ReactionType, User},
@@ -17,22 +16,11 @@ use teloxide::{
 struct AppConfig {
     #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
     teloxide_token: String,
-    #[setting(validate = not_empty, env = "MUSLINK_API_BASE_URL")]
-    muslink_api_base_url: String,
 }
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "../../libs/generated/backend-schema.graphql",
-    query_path = "../../libs/graphql/queries/resolve_music_link.graphql",
-    variables_derives = "Debug, Default",
-    response_derives = "Debug"
-)]
-struct ResolveMusicLink;
 
 async fn process_message(
     text: String,
-    config: &AppConfig,
+    _config: &AppConfig,
     user: Option<User>,
 ) -> Result<String, bool> {
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
@@ -47,43 +35,28 @@ async fn process_message(
     }
 
     let mut response = String::new();
-    let client = Client::new();
+    let music_service = MusicLinkService::new().await;
 
     for url in urls {
-        let resolve_music_link = ResolveMusicLink::build_query(resolve_music_link::Variables {
-            input: resolve_music_link::ResolveMusicLinkInput {
-                link: url.clone(),
-                ..Default::default()
-            },
-        });
+        // Create input for the service
+        let service_input = MusicLinkInput {
+            link: url.clone(),
+            user_country: "US".to_string(), // Default to US
+        };
 
-        let response_data = client
-            .post(config.muslink_api_base_url.clone())
-            .json(&resolve_music_link)
-            .send()
-            .await
-            .unwrap()
-            .json::<Response<resolve_music_link::ResponseData>>()
-            .await
-            .unwrap();
+        // Call the service directly
+        let result = match music_service.resolve_music_link(service_input).await {
+            Ok(result) => result,
+            Err(_) => continue, // Skip this URL if there's an error
+        };
 
-        let data = response_data
-            .data
-            .unwrap_or_else(|| resolve_music_link::ResponseData {
-                resolve_music_link: resolve_music_link::ResolveMusicLinkResolveMusicLink {
-                    found: 0,
-                    collected_links: vec![],
-                },
-            });
-
-        if data.resolve_music_link.found > 0 {
-            let platforms: Vec<_> = data
-                .resolve_music_link
+        if result.found > 0 {
+            let platforms: Vec<_> = result
                 .collected_links
                 .iter()
-                .filter_map(|api_link| {
-                    let platform = format!("{:?}", api_link.platform).to_case(Case::Title);
-                    api_link
+                .filter_map(|music_link| {
+                    let platform = format!("{:?}", music_link.platform).to_case(Case::Title);
+                    music_link
                         .data
                         .as_ref()
                         .map(|data| link(&data.url, &platform))
