@@ -38,16 +38,14 @@ async fn process_message(
     let music_service = MusicLinkService::new().await;
 
     for url in urls {
-        // Create input for the service
         let service_input = MusicLinkInput {
             link: url.clone(),
-            user_country: "US".to_string(), // Default to US
+            user_country: "US".to_string(),
         };
 
-        // Call the service directly
         let result = match music_service.resolve_music_link(service_input).await {
             Ok(result) => result,
-            Err(_) => continue, // Skip this URL if there's an error
+            Err(_) => continue,
         };
 
         if result.found > 0 {
