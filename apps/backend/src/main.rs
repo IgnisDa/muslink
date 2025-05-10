@@ -31,15 +31,31 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    tracing::info!("Starting Muslink Backend API");
+    
+    tracing::debug!("Initializing service");
     let service = Service::new().await;
+    
+    tracing::debug!("Building GraphQL schema");
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
         .data(Arc::new(service))
         .finish();
 
+    tracing::debug!("Creating API router");
     let app = Router::new().route("/", get(graphiql).post_service(GraphQL::new(schema)));
+    tracing::debug!("Router setup complete");
 
+    tracing::debug!("Binding TCP listener");
     let listener = TcpListener::bind("0.0.0.0:5000".to_string()).await.unwrap();
     tracing::info!("Listening on {}", listener.local_addr()?);
-    axum::serve(listener, app).await.unwrap();
-    Ok(())
+    
+    tracing::debug!("Starting Axum server");
+    let server_result = axum::serve(listener, app).await;
+    
+    match &server_result {
+        Ok(_) => tracing::info!("Server shutdown gracefully"),
+        Err(e) => tracing::error!("Server error: {}", e),
+    }
+    
+    server_result.map_err(Into::into)
 }

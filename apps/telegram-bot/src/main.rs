@@ -3,6 +3,7 @@ use std::{collections::HashSet, sync::Arc};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use schematic::{Config, ConfigLoader, validate::not_empty};
+use serde::Serialize;
 use service::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     prelude::*,
@@ -11,7 +12,7 @@ use teloxide::{
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[derive(Config)]
+#[derive(Serialize, Config)]
 #[config(env)]
 struct AppConfig {
     #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
@@ -108,7 +109,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
-    // Initialize the tracing subscriber
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
