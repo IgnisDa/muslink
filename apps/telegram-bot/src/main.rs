@@ -10,7 +10,6 @@ use teloxide::{
     types::{ParseMode, ReactionType, User},
     utils::html::{link, user_mention},
 };
-use tracing::{debug, info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Config)]
@@ -25,7 +24,7 @@ async fn process_message(
     _config: &AppConfig,
     user: Option<User>,
 ) -> Result<String, bool> {
-    debug!("Processing message: {}", text);
+    tracing::debug!("Processing message: {}", text);
     
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
@@ -35,17 +34,17 @@ async fn process_message(
         .collect();
 
     if urls.is_empty() {
-        debug!("No URLs found in message");
+        tracing::debug!("No URLs found in message");
         return Err(has_url);
     }
 
-    debug!("Found {} URLs in message", urls.len());
+    tracing::debug!("Found {} URLs in message", urls.len());
     let mut response = String::new();
     let music_service = MusicLinkService::new().await;
-    debug!("MusicLinkService initialized");
+    tracing::debug!("MusicLinkService initialized");
 
     for url in urls {
-        debug!("Processing URL: {}", url);
+        tracing::debug!("Processing URL: {}", url);
         let service_input = MusicLinkInput {
             link: url.clone(),
             user_country: "US".to_string(),
@@ -53,17 +52,17 @@ async fn process_message(
 
         let result = match music_service.resolve_music_link(service_input).await {
             Ok(result) => {
-                debug!("Successfully resolved music link, found: {}", result.found);
+                tracing::debug!("Successfully resolved music link, found: {}", result.found);
                 result
             },
             Err(e) => {
-                warn!("Failed to resolve music link for {}: {}", url, e);
+                tracing::warn!("Failed to resolve music link for {}: {}", url, e);
                 continue;
             },
         };
 
         if result.found > 0 {
-            debug!("Processing {} music platforms", result.collected_links.len());
+            tracing::debug!("Processing {} music platforms", result.collected_links.len());
             let platforms: Vec<_> = result
                 .collected_links
                 .iter()
@@ -73,7 +72,7 @@ async fn process_message(
                         .data
                         .as_ref()
                         .map(|data| {
-                            debug!("Found {} link: {}", platform, data.url);
+                            tracing::debug!("Found {} link: {}", platform, data.url);
                             link(&data.url, &platform)
                         })
                 })
@@ -84,12 +83,12 @@ async fn process_message(
             }
             response.push_str(&format!("for {}\n{}", url, platforms.join(", ")));
         } else {
-            debug!("No music platforms found for {}", url);
+            tracing::debug!("No music platforms found for {}", url);
         }
     }
 
     if response.is_empty() {
-        debug!("No music links found for any URLs");
+        tracing::debug!("No music links found for any URLs");
         return Err(has_url);
     }
 
@@ -97,11 +96,11 @@ async fn process_message(
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
-        debug!("Adding attribution for user: {}", user.full_name());
+        tracing::debug!("Adding attribution for user: {}", user.full_name());
         response.push_str(&format!("\n\nPosted by {}", username));
     }
 
-    debug!("Returning response with {} characters", response.len());
+    tracing::debug!("Returning response with {} characters", response.len());
     Ok(response)
 }
 
@@ -119,10 +118,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
         
-    info!("Starting Muslink Telegram Bot");
+    tracing::info!("Starting Muslink Telegram Bot");
 
     let config = ConfigLoader::<AppConfig>::new().load()?.config;
-    info!("Configuration loaded successfully");
+    tracing::info!("Configuration loaded successfully");
 
     let bot = Bot::new(config.teloxide_token.clone());
 
@@ -134,20 +133,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|| "Unknown".to_string());
             let chat_id = msg.chat.id;
             
-            info!("Received message from {} in chat {}", user_name, chat_id);
+            tracing::info!("Received message from {} in chat {}", user_name, chat_id);
             let text = msg.text().unwrap_or_default();
             
             match process_message(text.to_string(), &config, msg.from).await {
                 Ok(response) => {
-                    info!("Sending music link response to chat {}", chat_id);
+                    tracing::info!("Sending music link response to chat {}", chat_id);
                     bot.send_message(msg.chat.id, response)
                         .parse_mode(ParseMode::Html)
                         .await?;
-                    debug!("Deleting original message");
+                    tracing::debug!("Deleting original message");
                     bot.delete_message(msg.chat.id, msg.id).await?;
                 }
                 Err(has_url) if has_url => {
-                    debug!("URL detected but no music links found, reacting with sad emoji");
+                    tracing::debug!("URL detected but no music links found, reacting with sad emoji");
                     bot.set_message_reaction(msg.chat.id, msg.id)
                         .reaction(vec![ReactionType::Emoji {
                             emoji: "😢".to_string(),
@@ -155,14 +154,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .await?;
                 }
                 _ => {
-                    debug!("No URLs detected in message, ignoring");
+                    tracing::debug!("No URLs detected in message, ignoring");
                 }
             }
             respond(())
         },
     );
 
-    info!("Starting Telegram bot dispatcher");
+    tracing::info!("Starting Telegram bot dispatcher");
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(config)])
         .enable_ctrlc_handler()
@@ -170,6 +169,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .dispatch()
         .await;
 
-    info!("Telegram bot shutdown complete");
+    tracing::info!("Telegram bot shutdown complete");
     Ok(())
 }
