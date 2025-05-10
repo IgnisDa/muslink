@@ -1,95 +1,31 @@
 use async_graphql::Result;
-use reqwest::{Client, Url};
-use rust_iso3166::{from_alpha2, US};
-use strum::IntoEnumIterator;
 
-use crate::{
-    models::{
-        graphql::{
-            ResolveMusicLinkInput, ResolveMusicLinkResponse, ResolveMusicLinkResponseLink,
-            ResolveMusicLinkResponseLinkPlatform, ResolveMusicLinkResponseLinkPlatformData,
-        },
-        providers::{SongLinkPlatform, SongLinkResponse},
-    },
-    utils::{get_base_http_client, SONG_LINK_API_URL},
-};
+use crate::models::graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse};
 
 pub struct Service {
-    client: Client,
+    link_service: service::MusicLinkService,
 }
 
 impl Service {
     pub async fn new() -> Self {
-        let client = get_base_http_client(None);
-        Self { client }
+        let link_service = service::MusicLinkService::new().await;
+        Self { link_service }
     }
-}
 
-impl Service {
     pub async fn resolve_music_link(
         &self,
         input: ResolveMusicLinkInput,
     ) -> Result<ResolveMusicLinkResponse> {
-        tracing::debug!("Received link: {:?}", input);
-
-        let user_country = from_alpha2(input.user_country.as_str()).unwrap_or(US);
-
-        let url = Url::parse_with_params(
-            SONG_LINK_API_URL,
-            &[
-                ("songIfSingle", "true"),
-                ("url", input.link.as_str()),
-                ("userCountry", user_country.alpha2),
-            ],
-        )?;
-        let response = self
-            .client
-            .get(url)
-            .send()
-            .await?
-            .json::<SongLinkResponse>()
-            .await
-            .ok();
-
-        let mut found = 0;
-        let collected_links = ResolveMusicLinkResponseLinkPlatform::iter()
-            .map(|platform| {
-                let sl_platform = match platform {
-                    ResolveMusicLinkResponseLinkPlatform::Spotify => SongLinkPlatform::Spotify,
-                    ResolveMusicLinkResponseLinkPlatform::AppleMusic => {
-                        SongLinkPlatform::AppleMusic
-                    }
-                    ResolveMusicLinkResponseLinkPlatform::YoutubeMusic => {
-                        SongLinkPlatform::YoutubeMusic
-                    }
-                };
-                let platform_id = response.as_ref().and_then(|resp| {
-                    resp.entities_by_unique_id
-                        .values()
-                        .find(|entity| entity.platforms.contains(&sl_platform))
-                        .map(|entity| entity.id.clone())
-                });
-                let url = response.as_ref().and_then(|resp| {
-                    resp.links_by_platform
-                        .get(&sl_platform)
-                        .map(|link| link.url.clone())
-                });
-                let data = url.and_then(|u| {
-                    platform_id.map(|id| ResolveMusicLinkResponseLinkPlatformData { id, url: u })
-                });
-                if data.is_some() {
-                    found += 1;
-                }
-                ResolveMusicLinkResponseLink { platform, data }
-            })
-            .collect();
-
-        let response = ResolveMusicLinkResponse {
-            found,
-            collected_links,
+        let service_input = service::MusicLinkInput {
+            link: input.link,
+            user_country: input.user_country,
         };
 
-        tracing::debug!("Returning response {:?}", response);
+        let result = self.link_service.resolve_music_link(service_input).await?;
+
+        let response = crate::models::convert_to_graphql_response(result);
+
+        tracing::debug!("Returning GraphQL response");
         Ok(response)
     }
 }

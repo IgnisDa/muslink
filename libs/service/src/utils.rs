@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use reqwest::{
-    header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT},
     ClientBuilder,
+    header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT},
 };
 
 pub static USER_AGENT_STR: &str =
