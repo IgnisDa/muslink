@@ -13,3 +13,5 @@ service = { path = "../../libs/service" }
 serde = { workspace = true }
 teloxide = { workspace = true }
 tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
