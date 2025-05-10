@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-
 use async_graphql::{Enum, InputObject, SimpleObject};
-use nest_struct::nest_struct;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -41,37 +38,38 @@ pub mod graphql {
     }
 }
 
-pub mod providers {
-    use super::*;
+pub fn convert_to_graphql_response(
+    service_response: service::MusicLinkResponse,
+) -> graphql::ResolveMusicLinkResponse {
+    let collected_links = service_response
+        .collected_links
+        .into_iter()
+        .map(|link| {
+            let platform = match link.platform {
+                service::MusicPlatform::Spotify => {
+                    graphql::ResolveMusicLinkResponseLinkPlatform::Spotify
+                }
+                service::MusicPlatform::AppleMusic => {
+                    graphql::ResolveMusicLinkResponseLinkPlatform::AppleMusic
+                }
+                service::MusicPlatform::YoutubeMusic => {
+                    graphql::ResolveMusicLinkResponseLinkPlatform::YoutubeMusic
+                }
+            };
 
-    #[derive(Debug, Hash, Serialize, Deserialize, PartialEq, Eq)]
-    #[serde(rename_all = "camelCase")]
-    pub enum SongLinkPlatform {
-        Spotify,
-        AppleMusic,
-        YoutubeMusic,
-        #[serde(untagged)]
-        Unknown(String),
-    }
+            let data = link
+                .data
+                .map(|d| graphql::ResolveMusicLinkResponseLinkPlatformData {
+                    id: d.id,
+                    url: d.url,
+                });
 
-    #[nest_struct]
-    #[derive(Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SongLinkResponse {
-        pub page_url: String,
-        pub entity_unique_id: String,
-        pub entities_by_unique_id: HashMap<
-            String,
-            nest! {
-                pub id: String,
-                pub platforms: Vec<SongLinkPlatform>,
-            },
-        >,
-        pub links_by_platform: HashMap<
-            SongLinkPlatform,
-            nest! {
-                pub url: String,
-            },
-        >,
+            graphql::ResolveMusicLinkResponseLink { platform, data }
+        })
+        .collect();
+
+    graphql::ResolveMusicLinkResponse {
+        found: service_response.found,
+        collected_links,
     }
 }

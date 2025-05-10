@@ -274,10 +274,8 @@ dependencies = [
  "async-graphql",
  "async-graphql-axum",
  "axum",
- "nest_struct",
- "reqwest",
- "rust_iso3166",
  "serde",
+ "service",
  "strum",
  "tokio",
  "tracing",
@@ -2238,6 +2236,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
+]
+
+[[package]]
+name = "service"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "nest_struct",
+ "reqwest",
+ "rust_iso3166",
+ "serde",
+ "strum",
+ "tracing",
 ]
 
 [[package]]

@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use async_graphql::{http::GraphiQLSource, EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema, http::GraphiQLSource};
 use async_graphql_axum::GraphQL;
 use axum::{
+    Router,
     response::{self, IntoResponse},
     routing::get,
-    Router,
 };
 use resolver::QueryRoot;
 use service::Service;
@@ -16,7 +16,6 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod models;
 mod resolver;
 mod service;
-mod utils;
 
 async fn graphiql() -> impl IntoResponse {
     response::Html(GraphiQLSource::build().endpoint("/").finish())
