@@ -3,33 +3,33 @@ members = ["apps/backend", "apps/telegram-bot", "libs/service"]
 resolver = "2"
 
 [workspace.dependencies]
-anyhow = "=1.0.95"
-async-graphql = "=7.0.13"
-async-graphql-axum = "=7.0.13"
-axum = "=0.7.9"
+anyhow = "=1.0.98"
+async-graphql = "=7.0.16"
+async-graphql-axum = "=7.0.16"
+axum = "=0.8.4"
 convert_case = "=0.8.0"
 dotenvy = "=0.15.7"
 dptree = "=0.3.0"
 graphql_client = "=0.14.0"
-nest_struct = "=0.5.2"
-regex = "1.10.3"
-reqwest = { version = "=0.12.12", default-features = false, features = [
+nest_struct = "=0.5.4"
+regex = "1.11.1"
+reqwest = { version = "=0.12.15", default-features = false, features = [
   "json",
   "stream",
   "rustls-tls",
 ] }
 rust_iso3166 = "=0.1.14"
-schematic = { version = "=0.18.1", features = [
+schematic = { version = "=0.18.4", features = [
   "config",
   "env",
   "validate",
 ], default-features = false }
 serde = "=1.0.219"
-strum = { version = "=0.26.3", features = ["derive"] }
-teloxide = { version = "0.14.0", default-features = false, features = [
+strum = { version = "=0.27.1", features = ["derive"] }
+teloxide = { version = "0.15.0", default-features = false, features = [
   "ctrlc_handler",
   "rustls",
 ] }
-tokio = { version = "=1.43.0", features = ["full"] }
+tokio = { version = "=1.45.0", features = ["full"] }
 tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
