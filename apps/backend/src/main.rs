@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use async_graphql::{EmptyMutation, EmptySubscription, Schema, http::GraphiQLSource};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema, http::graphiql_source};
 use async_graphql_axum::GraphQL;
 use axum::{
     Router,
@@ -18,7 +18,7 @@ mod resolver;
 mod service;
 
 async fn graphiql() -> impl IntoResponse {
-    response::Html(GraphiQLSource::build().endpoint("/").finish())
+    response::Html(graphiql_source("/", None))
 }
 
 #[tokio::main]
