@@ -1,5 +1,4 @@
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use convert_case::{Case, Casing};
 use regex::Regex;
@@ -25,7 +24,7 @@ async fn process_message(
     user: Option<User>,
 ) -> Result<String, bool> {
     tracing::debug!("Processing message: {}", text);
-    
+
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let has_url = url_regex.is_match(&text);
     let urls: HashSet<_> = url_regex
@@ -54,27 +53,27 @@ async fn process_message(
             Ok(result) => {
                 tracing::debug!("Successfully resolved music link, found: {}", result.found);
                 result
-            },
+            }
             Err(e) => {
                 tracing::warn!("Failed to resolve music link for {}: {}", url, e);
                 continue;
-            },
+            }
         };
 
         if result.found > 0 {
-            tracing::debug!("Processing {} music platforms", result.collected_links.len());
+            tracing::debug!(
+                "Processing {} music platforms",
+                result.collected_links.len()
+            );
             let platforms: Vec<_> = result
                 .collected_links
                 .iter()
                 .filter_map(|music_link| {
                     let platform = format!("{:?}", music_link.platform).to_case(Case::Title);
-                    music_link
-                        .data
-                        .as_ref()
-                        .map(|data| {
-                            tracing::debug!("Found {} link: {}", platform, data.url);
-                            link(&data.url, &platform)
-                        })
+                    music_link.data.as_ref().map(|data| {
+                        tracing::debug!("Found {} link: {}", platform, data.url);
+                        link(&data.url, &platform)
+                    })
                 })
                 .collect();
 
@@ -108,7 +107,7 @@ async fn process_message(
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
-    
+
     // Initialize the tracing subscriber
     tracing_subscriber::registry()
         .with(
@@ -117,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
-        
+
     tracing::info!("Starting Muslink Telegram Bot");
 
     let config = ConfigLoader::<AppConfig>::new().load()?.config;
@@ -127,15 +126,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let handler = Update::filter_message().endpoint(
         |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
-            let user_name = msg.from
+            let user_name = msg
+                .from
                 .as_ref()
                 .map(|user| user.full_name())
                 .unwrap_or_else(|| "Unknown".to_string());
             let chat_id = msg.chat.id;
-            
+
             tracing::info!("Received message from {} in chat {}", user_name, chat_id);
             let text = msg.text().unwrap_or_default();
-            
+
             match process_message(text.to_string(), &config, msg.from).await {
                 Ok(response) => {
                     tracing::info!("Sending music link response to chat {}", chat_id);
@@ -146,7 +146,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     bot.delete_message(msg.chat.id, msg.id).await?;
                 }
                 Err(has_url) if has_url => {
-                    tracing::debug!("URL detected but no music links found, reacting with sad emoji");
+                    tracing::debug!(
+                        "URL detected but no music links found, reacting with sad emoji"
+                    );
                     bot.set_message_reaction(msg.chat.id, msg.id)
                         .reaction(vec![ReactionType::Emoji {
                             emoji: "😢".to_string(),
