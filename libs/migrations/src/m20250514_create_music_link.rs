@@ -18,6 +18,7 @@ pub enum MusicLink {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let db = manager.get_connection();
         manager
             .create_table(
                 Table::create()
@@ -47,12 +48,49 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(MusicLink::AllLinks)
                             .not_null()
-                            .array(ColumnType::Text)
-                            .extra("GENERATED ALWAYS AS (ARRAY[spotify_link, apple_music_link, youtube_music_link] || equivalent_links) STORED"),
+                            .array(ColumnType::Text),
                     )
                     .to_owned(),
             )
             .await?;
+        db.execute_unprepared(
+            "
+CREATE OR REPLACE FUNCTION update_all_links()
+RETURNS TRIGGER AS $$
+DECLARE
+    temp_links text[];
+BEGIN
+    temp_links := ARRAY[]::text[];
+
+    IF NEW.spotify_link IS NOT NULL THEN
+        temp_links := temp_links || NEW.spotify_link;
+    END IF;
+
+    IF NEW.apple_music_link IS NOT NULL THEN
+        temp_links := temp_links || NEW.apple_music_link;
+    END IF;
+
+    IF NEW.youtube_music_link IS NOT NULL THEN
+        temp_links := temp_links || NEW.youtube_music_link;
+    END IF;
+
+    IF NEW.equivalent_links IS NOT NULL THEN
+        temp_links := temp_links || NEW.equivalent_links;
+    END IF;
+
+    NEW.all_links := temp_links;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_all_links_before_insert_or_update
+BEFORE INSERT OR UPDATE ON music_link
+FOR EACH ROW
+EXECUTE FUNCTION update_all_links();
+            ",
+        )
+        .await?;
         manager
             .create_index(
                 Index::create()
