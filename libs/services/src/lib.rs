@@ -9,7 +9,7 @@ mod utils;
 
 use models::providers::{SongLinkPlatform, SongLinkResponse};
 pub use models::{
-    MusicLink, MusicLinkInput, MusicLinkPlatformData, MusicLinkResponse, MusicPlatform,
+    MusicLinkData, MusicLinkInput, MusicLinkPlatformData, MusicLinkResponse, MusicPlatform,
 };
 use utils::{SONG_LINK_API_URL, get_base_http_client};
 
@@ -73,7 +73,7 @@ impl MusicLinkService {
                 if data.is_some() {
                     found += 1;
                 }
-                MusicLink { platform, data }
+                MusicLinkData { platform, data }
             })
             .collect();
 

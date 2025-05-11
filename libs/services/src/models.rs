@@ -24,7 +24,7 @@ pub struct MusicLinkPlatformData {
 }
 
 #[derive(Debug)]
-pub struct MusicLink {
+pub struct MusicLinkData {
     pub platform: MusicPlatform,
     pub data: Option<MusicLinkPlatformData>,
 }
@@ -32,7 +32,7 @@ pub struct MusicLink {
 #[derive(Debug)]
 pub struct MusicLinkResponse {
     pub found: u8,
-    pub collected_links: Vec<MusicLink>,
+    pub collected_links: Vec<MusicLinkData>,
 }
 
 pub mod providers {
