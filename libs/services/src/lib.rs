@@ -1,6 +1,7 @@
 use anyhow::Result;
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
+use sea_orm::DatabaseConnection;
 use strum::IntoEnumIterator;
 
 mod models;
@@ -22,7 +23,11 @@ impl MusicLinkService {
         Self { client }
     }
 
-    pub async fn resolve_music_link(&self, input: MusicLinkInput) -> Result<MusicLinkResponse> {
+    pub async fn resolve_music_link(
+        &self,
+        input: MusicLinkInput,
+        db: &DatabaseConnection,
+    ) -> Result<MusicLinkResponse> {
         tracing::debug!("Received link: {:?}", input);
 
         let user_country = from_alpha2(input.user_country.as_str()).unwrap_or(US);

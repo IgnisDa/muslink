@@ -3070,6 +3070,7 @@ dependencies = [
  "nest_struct",
  "reqwest",
  "rust_iso3166",
+ "sea-orm",
  "serde",
  "strum 0.27.1",
  "tracing",

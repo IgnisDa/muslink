@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
     tracing::info!("Database migrations completed");
 
     tracing::debug!("Initializing service");
-    let service = Service::new().await;
+    let service = Service::new(db).await;
 
     tracing::debug!("Building GraphQL schema");
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)

@@ -88,7 +88,7 @@ pub async fn process_message(
             user_country: "US".to_string(),
         };
 
-        let result = match music_service.resolve_music_link(service_input).await {
+        let result = match music_service.resolve_music_link(service_input, &db).await {
             Ok(result) => {
                 tracing::debug!("Successfully resolved music link, found: {}", result.found);
                 result

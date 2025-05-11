@@ -1,17 +1,19 @@
 use async_graphql::Result;
+use sea_orm::DatabaseConnection;
 
 use crate::models::graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse};
 
 pub struct Service {
+    db: DatabaseConnection,
     link_service: services::MusicLinkService,
 }
 
 impl Service {
-    pub async fn new() -> Self {
+    pub async fn new(db: DatabaseConnection) -> Self {
         tracing::debug!("Initializing backend service");
         let link_service = services::MusicLinkService::new().await;
         tracing::debug!("MusicLinkService initialized");
-        Self { link_service }
+        Self { db, link_service }
     }
 
     pub async fn resolve_music_link(
@@ -30,7 +32,11 @@ impl Service {
         };
 
         tracing::debug!("Calling service to resolve music link");
-        let result = match self.link_service.resolve_music_link(service_input).await {
+        let result = match self
+            .link_service
+            .resolve_music_link(service_input, &self.db)
+            .await
+        {
             Ok(result) => {
                 tracing::debug!(
                     "Successfully resolved music link, found {} platforms",
