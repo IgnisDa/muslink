@@ -1,16 +1,13 @@
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 
-use convert_case::{Case, Casing};
-use regex::Regex;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
-use service::{MusicLinkInput, MusicLinkService};
+use services::process_message;
 use teloxide::{
     prelude::*,
-    types::{ParseMode, ReactionType, User},
-    utils::html::{link, user_mention},
+    types::{ParseMode, ReactionType},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -25,91 +22,6 @@ struct AppConfig {
     database_url: String,
     #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
     teloxide_token: String,
-}
-
-async fn process_message(
-    text: String,
-    _config: &AppConfig,
-    user: Option<User>,
-) -> Result<String, bool> {
-    tracing::debug!("Processing message: {}", text);
-
-    let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
-    let has_url = url_regex.is_match(&text);
-    let urls: HashSet<_> = url_regex
-        .find_iter(&text)
-        .map(|m| m.as_str().to_string())
-        .collect();
-
-    if urls.is_empty() {
-        tracing::debug!("No URLs found in message");
-        return Err(has_url);
-    }
-
-    tracing::debug!("Found {} URLs in message", urls.len());
-    let mut response = String::new();
-    let music_service = MusicLinkService::new().await;
-    tracing::debug!("MusicLinkService initialized");
-
-    for url in urls {
-        tracing::debug!("Processing URL: {}", url);
-        let service_input = MusicLinkInput {
-            link: url.clone(),
-            user_country: "US".to_string(),
-        };
-
-        let result = match music_service.resolve_music_link(service_input).await {
-            Ok(result) => {
-                tracing::debug!("Successfully resolved music link, found: {}", result.found);
-                result
-            }
-            Err(e) => {
-                tracing::warn!("Failed to resolve music link for {}: {}", url, e);
-                continue;
-            }
-        };
-
-        if result.found > 0 {
-            tracing::debug!(
-                "Processing {} music platforms",
-                result.collected_links.len()
-            );
-            let platforms: Vec<_> = result
-                .collected_links
-                .iter()
-                .filter_map(|music_link| {
-                    let platform = format!("{:?}", music_link.platform).to_case(Case::Title);
-                    music_link.data.as_ref().map(|data| {
-                        tracing::debug!("Found {} link: {}", platform, data.url);
-                        link(&data.url, &platform)
-                    })
-                })
-                .collect();
-
-            if !response.is_empty() {
-                response.push_str("\n\n");
-            }
-            response.push_str(&format!("for {}\n{}", url, platforms.join(", ")));
-        } else {
-            tracing::debug!("No music platforms found for {}", url);
-        }
-    }
-
-    if response.is_empty() {
-        tracing::debug!("No music links found for any URLs");
-        return Err(has_url);
-    }
-
-    if let Some(user) = user {
-        let username = user
-            .mention()
-            .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
-        tracing::debug!("Adding attribution for user: {}", user.full_name());
-        response.push_str(&format!("\n\nPosted by {}", username));
-    }
-
-    tracing::debug!("Returning response with {} characters", response.len());
-    Ok(response)
 }
 
 #[tokio::main]
@@ -152,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             tracing::info!("Received message from {} in chat {}", user_name, chat_id);
             let text = msg.text().unwrap_or_default();
 
-            match process_message(text.to_string(), &config, msg.from).await {
+            match process_message(text.to_string(), msg.from.clone(), &config, db.clone()).await {
                 Ok(response) => {
                     tracing::info!("Sending music link response to chat {}", chat_id);
                     bot.send_message(msg.chat.id, response)
