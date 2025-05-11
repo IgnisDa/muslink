@@ -41,7 +41,13 @@ impl MusicLinkService {
             )
             .one(db)
             .await?;
-        Ok(music_link)
+        match music_link {
+            None => Ok(None),
+            Some(l) => {
+                //
+                Ok(Some(l))
+            }
+        }
     }
 
     async fn save_music_link_to_db(
