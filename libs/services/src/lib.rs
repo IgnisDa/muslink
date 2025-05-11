@@ -2,7 +2,9 @@ use anyhow::Result;
 use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+};
 use strum::IntoEnumIterator;
 
 mod models;
@@ -37,6 +39,33 @@ impl MusicLinkService {
             .one(db)
             .await?;
         Ok(music_link)
+    }
+
+    async fn save_music_link_to_db(
+        &self,
+        db: &DatabaseConnection,
+        links: &Vec<MusicLinkData>,
+    ) -> Result<()> {
+        let spotify_link = links
+            .iter()
+            .find(|link| link.platform == MusicPlatform::Spotify)
+            .and_then(|link| link.link.clone());
+        let apple_music_link = links
+            .iter()
+            .find(|link| link.platform == MusicPlatform::AppleMusic)
+            .and_then(|link| link.link.clone());
+        let youtube_music_link = links
+            .iter()
+            .find(|link| link.platform == MusicPlatform::YoutubeMusic)
+            .and_then(|link| link.link.clone());
+        let to_insert = music_link::ActiveModel {
+            spotify_link: ActiveValue::Set(spotify_link),
+            apple_music_link: ActiveValue::Set(apple_music_link),
+            youtube_music_link: ActiveValue::Set(youtube_music_link),
+            ..Default::default()
+        };
+        to_insert.insert(db).await?;
+        Ok(())
     }
 
     pub async fn resolve_music_link(
@@ -116,6 +145,8 @@ impl MusicLinkService {
                 MusicLinkData { link, platform }
             })
             .collect();
+
+        self.save_music_link_to_db(db, &collected_links).await?;
 
         let response = MusicLinkResponse {
             found,
