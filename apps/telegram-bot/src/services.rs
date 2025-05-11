@@ -34,24 +34,23 @@ pub async fn find_or_create_channel(
     Ok(result)
 }
 
+pub enum ProcessMessageResponse {
+    NoUrlDetected,
+    HasUrlNoMusicLinksFound,
+    HasUrlMusicLinksFound(String),
+}
+
 pub async fn process_message(
     text: String,
     msg: &Message,
     db: Arc<DatabaseConnection>,
-) -> Result<String, bool> {
-    let channel = match find_or_create_channel(&db, msg.chat.id.0).await {
-        Ok(channel) => channel,
-        Err(e) => {
-            tracing::error!("Failed to find or create channel: {}", e);
-            return Err(false);
-        }
-    };
-    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
-
+) -> Result<ProcessMessageResponse, DbErr> {
     tracing::debug!("Processing message: {}", text);
 
+    let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
+    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
+
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
-    let has_url = url_regex.is_match(&text);
     let urls: HashSet<_> = url_regex
         .find_iter(&text)
         .map(|m| m.as_str().to_string())
@@ -59,7 +58,7 @@ pub async fn process_message(
 
     if urls.is_empty() {
         tracing::debug!("No URLs found in message");
-        return Err(has_url);
+        return Ok(ProcessMessageResponse::NoUrlDetected);
     }
 
     tracing::debug!("Found {} URLs in message", urls.len());
@@ -113,7 +112,7 @@ pub async fn process_message(
 
     if response.is_empty() {
         tracing::debug!("No music links found for any URLs");
-        return Err(has_url);
+        return Ok(ProcessMessageResponse::HasUrlNoMusicLinksFound);
     }
 
     if let Some(user) = &msg.from {
@@ -125,5 +124,5 @@ pub async fn process_message(
     }
 
     tracing::debug!("Returning response with {} characters", response.len());
-    Ok(response)
+    Ok(ProcessMessageResponse::HasUrlMusicLinksFound(response))
 }

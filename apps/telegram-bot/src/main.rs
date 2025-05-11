@@ -4,7 +4,7 @@ use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
-use services::process_message;
+use services::{ProcessMessageResponse, process_message};
 use teloxide::{
     prelude::*,
     types::{ParseMode, ReactionType},
@@ -65,28 +65,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let text = msg.text().unwrap_or_default();
 
             match process_message(text.to_string(), &msg, db.clone()).await {
-                Ok(response) => {
-                    tracing::info!("Sending music link response to chat {}", chat_id);
-                    bot.send_message(msg.chat.id, response)
-                        .parse_mode(ParseMode::Html)
-                        .await?;
-                    tracing::debug!("Deleting original message");
-                    bot.delete_message(msg.chat.id, msg.id).await?;
+                Err(e) => {
+                    tracing::error!("Failed to process message: {}", e);
                 }
-                Err(has_url) if has_url => {
-                    tracing::debug!(
-                        "URL detected but no music links found, reacting with sad emoji"
-                    );
-                    bot.set_message_reaction(msg.chat.id, msg.id)
-                        .reaction(vec![ReactionType::Emoji {
-                            emoji: "😢".to_string(),
-                        }])
-                        .await?;
-                }
-                _ => {
-                    tracing::debug!("No URLs detected in message, ignoring");
-                }
-            }
+                Ok(response) => match response {
+                    ProcessMessageResponse::NoUrlDetected => {
+                        tracing::debug!("No URL detected in message, ignoring");
+                        return Ok(());
+                    }
+                    ProcessMessageResponse::HasUrlNoMusicLinksFound => {
+                        tracing::debug!(
+                            "URL detected but no music links found, reacting with sad emoji"
+                        );
+                        bot.set_message_reaction(msg.chat.id, msg.id)
+                            .reaction(vec![ReactionType::Emoji {
+                                emoji: "😢".to_string(),
+                            }])
+                            .await?;
+                        return Ok(());
+                    }
+                    ProcessMessageResponse::HasUrlMusicLinksFound(response) => {
+                        tracing::info!("Sending music link response to chat {}", chat_id);
+                        bot.send_message(msg.chat.id, response)
+                            .parse_mode(ParseMode::Html)
+                            .await?;
+                        tracing::debug!("Deleting original message");
+                        bot.delete_message(msg.chat.id, msg.id).await?;
+                        return Ok(());
+                    }
+                },
+            };
             respond(())
         },
     );
