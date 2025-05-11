@@ -15,8 +15,4 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
         .await?;
         Ok(())
     }
-
-    async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
-        Ok(())
-    }
 }
