@@ -41,6 +41,15 @@ impl MusicLinkService {
             )
             .one(db)
             .await?;
+        Ok(music_link)
+    }
+
+    async fn get_and_set_music_link_from_db(
+        &self,
+        link: &String,
+        db: &DatabaseConnection,
+    ) -> Result<Option<music_link::Model>> {
+        let music_link = self.get_music_link_from_db(link, db).await?;
         match music_link {
             None => Ok(None),
             Some(mut l) => {
@@ -74,11 +83,20 @@ impl MusicLinkService {
             .iter()
             .find(|link| link.platform == MusicPlatform::YoutubeMusic)
             .and_then(|link| link.link.clone());
+        let equivalent_links = vec![
+            Some(original_link.clone()),
+            spotify_link.clone(),
+            apple_music_link.clone(),
+            youtube_music_link.clone(),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
         let to_insert = music_link::ActiveModel {
             spotify_link: ActiveValue::Set(spotify_link),
+            equivalent_links: ActiveValue::Set(equivalent_links),
             apple_music_link: ActiveValue::Set(apple_music_link),
             youtube_music_link: ActiveValue::Set(youtube_music_link),
-            equivalent_links: ActiveValue::Set(vec![original_link.clone()]),
             ..Default::default()
         };
         to_insert.insert(db).await?;
@@ -92,7 +110,7 @@ impl MusicLinkService {
     ) -> Result<MusicLinkResponse> {
         tracing::debug!("Received link: {:?}", input);
 
-        let music_link = self.get_music_link_from_db(&input.link, db).await?;
+        let music_link = self.get_and_set_music_link_from_db(&input.link, db).await?;
         if let Some(music_link) = music_link {
             tracing::debug!("Found music link in db: {:?}", music_link);
             let mut found = 0;
