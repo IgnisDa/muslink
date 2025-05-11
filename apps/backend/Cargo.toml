@@ -9,7 +9,7 @@ async-graphql = { workspace = true }
 async-graphql-axum = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
-service = { path = "../../libs/service" }
+services = { path = "../../libs/services" }
 strum = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

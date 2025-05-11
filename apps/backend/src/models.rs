@@ -39,20 +39,20 @@ pub mod graphql {
 }
 
 pub fn convert_to_graphql_response(
-    service_response: service::MusicLinkResponse,
+    service_response: services::MusicLinkResponse,
 ) -> graphql::ResolveMusicLinkResponse {
     let collected_links = service_response
         .collected_links
         .into_iter()
         .map(|link| {
             let platform = match link.platform {
-                service::MusicPlatform::Spotify => {
+                services::MusicPlatform::Spotify => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::Spotify
                 }
-                service::MusicPlatform::AppleMusic => {
+                services::MusicPlatform::AppleMusic => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::AppleMusic
                 }
-                service::MusicPlatform::YoutubeMusic => {
+                services::MusicPlatform::YoutubeMusic => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::YoutubeMusic
                 }
             };

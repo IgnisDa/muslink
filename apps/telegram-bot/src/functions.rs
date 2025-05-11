@@ -9,7 +9,7 @@ use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,
 };
-use service::{MusicLinkInput, MusicLinkService};
+use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     types::Message,
     utils::html::{link, user_mention},

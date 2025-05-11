@@ -361,7 +361,7 @@ dependencies = [
  "async-graphql-axum",
  "axum",
  "serde",
- "service",
+ "services",
  "strum 0.27.1",
  "tokio",
  "tracing",
@@ -3052,7 +3052,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "service"
+name = "services"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -3581,7 +3581,7 @@ dependencies = [
  "sea-orm",
  "sea-orm-migration",
  "serde",
- "service",
+ "services",
  "teloxide",
  "tokio",
  "tracing",
