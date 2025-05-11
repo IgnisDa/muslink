@@ -43,8 +43,14 @@ impl MusicLinkService {
             .await?;
         match music_link {
             None => Ok(None),
-            Some(l) => {
-                //
+            Some(mut l) => {
+                if !l.equivalent_links.contains(link) {
+                    let mut active: music_link::ActiveModel = l.clone().into();
+                    let mut new_links = l.equivalent_links.clone();
+                    new_links.push(link.clone());
+                    active.equivalent_links = ActiveValue::Set(new_links);
+                    l = active.update(db).await?;
+                }
                 Ok(Some(l))
             }
         }
@@ -52,6 +58,7 @@ impl MusicLinkService {
 
     async fn save_music_link_to_db(
         &self,
+        original_link: &String,
         db: &DatabaseConnection,
         links: &Vec<MusicLinkData>,
     ) -> Result<()> {
@@ -71,6 +78,7 @@ impl MusicLinkService {
             spotify_link: ActiveValue::Set(spotify_link),
             apple_music_link: ActiveValue::Set(apple_music_link),
             youtube_music_link: ActiveValue::Set(youtube_music_link),
+            equivalent_links: ActiveValue::Set(vec![original_link.clone()]),
             ..Default::default()
         };
         to_insert.insert(db).await?;
@@ -155,7 +163,8 @@ impl MusicLinkService {
             })
             .collect();
 
-        self.save_music_link_to_db(db, &collected_links).await?;
+        self.save_music_link_to_db(&input.link, db, &collected_links)
+            .await?;
 
         let response = MusicLinkResponse {
             found,
