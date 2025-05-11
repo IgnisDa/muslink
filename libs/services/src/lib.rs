@@ -158,8 +158,10 @@ impl MusicLinkService {
             })
             .collect();
 
-        self.save_music_link_to_db(&input.link, db, &collected_links)
-            .await?;
+        if found > 0 {
+            self.save_music_link_to_db(&input.link, db, &collected_links)
+                .await?;
+        }
 
         let response = MusicLinkResponse {
             found,
