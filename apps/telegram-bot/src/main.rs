@@ -16,6 +16,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod entities;
 mod migrations;
+mod services;
 
 #[derive(Serialize, Config)]
 #[config(env)]
