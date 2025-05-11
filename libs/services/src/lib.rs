@@ -3,8 +3,8 @@ use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
-    prelude::Expr, sea_query::PgFunc,
+    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter, prelude::Expr,
+    sea_query::PgFunc,
 };
 use strum::IntoEnumIterator;
 
@@ -31,38 +31,10 @@ impl MusicLinkService {
         db: &DatabaseConnection,
     ) -> Result<Option<music_link::Model>> {
         let music_link = MusicLink::find()
-            .filter(
-                music_link::Column::SpotifyLink
-                    .eq(link)
-                    .or(music_link::Column::AppleMusicLink.eq(link))
-                    .or(music_link::Column::YoutubeMusicLink.eq(link))
-                    .or(Expr::val(link)
-                        .eq(PgFunc::any(Expr::col(music_link::Column::EquivalentLinks)))),
-            )
+            .filter(Expr::val(link).eq(PgFunc::any(Expr::col(music_link::Column::AllLinks))))
             .one(db)
             .await?;
         Ok(music_link)
-    }
-
-    async fn get_and_set_music_link_from_db(
-        &self,
-        link: &String,
-        db: &DatabaseConnection,
-    ) -> Result<Option<music_link::Model>> {
-        let music_link = self.get_music_link_from_db(link, db).await?;
-        match music_link {
-            None => Ok(None),
-            Some(mut l) => {
-                if !l.equivalent_links.contains(link) {
-                    let mut active: music_link::ActiveModel = l.clone().into();
-                    let mut new_links = l.equivalent_links.clone();
-                    new_links.push(link.clone());
-                    active.equivalent_links = ActiveValue::Set(new_links);
-                    l = active.update(db).await?;
-                }
-                Ok(Some(l))
-            }
-        }
     }
 
     async fn save_music_link_to_db(
@@ -110,7 +82,7 @@ impl MusicLinkService {
     ) -> Result<MusicLinkResponse> {
         tracing::debug!("Received link: {:?}", input);
 
-        let music_link = self.get_and_set_music_link_from_db(&input.link, db).await?;
+        let music_link = self.get_music_link_from_db(&input.link, db).await?;
         if let Some(music_link) = music_link {
             tracing::debug!("Found music link in db: {:?}", music_link);
             let mut found = 0;
