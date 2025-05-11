@@ -9,9 +9,7 @@ mod models;
 mod utils;
 
 use models::providers::{SongLinkPlatform, SongLinkResponse};
-pub use models::{
-    MusicLinkData, MusicLinkInput, MusicLinkPlatformData, MusicLinkResponse, MusicPlatform,
-};
+pub use models::{MusicLinkData, MusicLinkInput, MusicLinkResponse, MusicPlatform};
 use utils::{SONG_LINK_API_URL, get_base_http_client};
 
 pub struct MusicLinkService {
@@ -56,30 +54,21 @@ impl MusicLinkService {
             if let Some(spotify_link) = music_link.spotify_link {
                 found += 1;
                 collected_links.push(MusicLinkData {
+                    link: Some(spotify_link),
                     platform: MusicPlatform::Spotify,
-                    data: Some(MusicLinkPlatformData {
-                        id: music_link.id,
-                        url: spotify_link,
-                    }),
                 });
                 if let Some(apple_music_link) = music_link.apple_music_link {
                     found += 1;
                     collected_links.push(MusicLinkData {
+                        link: Some(apple_music_link),
                         platform: MusicPlatform::AppleMusic,
-                        data: Some(MusicLinkPlatformData {
-                            id: music_link.id,
-                            url: apple_music_link,
-                        }),
                     });
                 }
                 if let Some(youtube_music_link) = music_link.youtube_music_link {
                     found += 1;
                     collected_links.push(MusicLinkData {
+                        link: Some(youtube_music_link),
                         platform: MusicPlatform::YoutubeMusic,
-                        data: Some(MusicLinkPlatformData {
-                            id: music_link.id,
-                            url: youtube_music_link,
-                        }),
                     });
                 }
             }
@@ -116,23 +105,15 @@ impl MusicLinkService {
                     MusicPlatform::AppleMusic => SongLinkPlatform::AppleMusic,
                     MusicPlatform::YoutubeMusic => SongLinkPlatform::YoutubeMusic,
                 };
-                let platform_id = response.as_ref().and_then(|resp| {
-                    resp.entities_by_unique_id
-                        .values()
-                        .find(|entity| entity.platforms.contains(&sl_platform))
-                        .map(|entity| entity.id.clone())
-                });
-                let url = response.as_ref().and_then(|resp| {
+                let link = response.as_ref().and_then(|resp| {
                     resp.links_by_platform
                         .get(&sl_platform)
                         .map(|link| link.url.clone())
                 });
-                let data =
-                    url.and_then(|u| platform_id.map(|id| MusicLinkPlatformData { id, url: u }));
-                if data.is_some() {
+                if link.is_some() {
                     found += 1;
                 }
-                MusicLinkData { platform, data }
+                MusicLinkData { link, platform }
             })
             .collect();
 

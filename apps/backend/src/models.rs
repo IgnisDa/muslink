@@ -20,15 +20,9 @@ pub mod graphql {
     }
 
     #[derive(SimpleObject, Debug)]
-    pub struct ResolveMusicLinkResponseLinkPlatformData {
-        pub id: String,
-        pub url: String,
-    }
-
-    #[derive(SimpleObject, Debug)]
     pub struct ResolveMusicLinkResponseLink {
+        pub link: Option<String>,
         pub platform: ResolveMusicLinkResponseLinkPlatform,
-        pub data: Option<ResolveMusicLinkResponseLinkPlatformData>,
     }
 
     #[derive(SimpleObject, Debug)]
@@ -57,14 +51,10 @@ pub fn convert_to_graphql_response(
                 }
             };
 
-            let data = link
-                .data
-                .map(|d| graphql::ResolveMusicLinkResponseLinkPlatformData {
-                    id: d.id,
-                    url: d.url,
-                });
-
-            graphql::ResolveMusicLinkResponseLink { platform, data }
+            graphql::ResolveMusicLinkResponseLink {
+                platform,
+                link: link.link,
+            }
         })
         .collect();
 
