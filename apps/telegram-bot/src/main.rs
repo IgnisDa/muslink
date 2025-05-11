@@ -3,6 +3,8 @@ use std::{collections::HashSet, sync::Arc};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use schematic::{Config, ConfigLoader, validate::not_empty};
+use sea_orm::{Database, DatabaseConnection};
+use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
 use service::{MusicLinkInput, MusicLinkService};
 use teloxide::{
@@ -11,6 +13,8 @@ use teloxide::{
     utils::html::{link, user_mention},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+mod migrations;
 
 #[derive(Serialize, Config)]
 #[config(env)]
@@ -124,10 +128,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ConfigLoader::<AppConfig>::new().load()?.config;
     tracing::info!("Configuration loaded successfully");
 
+    tracing::info!("Connecting to database...");
+    let db = Database::connect(&config.database_url).await?;
+    tracing::info!("Database connection established");
+
+    tracing::info!("Running database migrations...");
+    migrations::Migrator::up(&db, None).await?;
+    tracing::info!("Database migrations completed");
+
     let bot = Bot::new(config.teloxide_token.clone());
 
     let handler = Update::filter_message().endpoint(
-        |bot: Bot, config: Arc<AppConfig>, msg: Message| async move {
+        |bot: Bot, config: Arc<AppConfig>, db: Arc<DatabaseConnection>, msg: Message| async move {
             let user_name = msg
                 .from
                 .as_ref()
@@ -167,7 +179,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("Starting Telegram bot dispatcher");
     Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![Arc::new(config)])
+        .dependencies(dptree::deps![Arc::new(config), Arc::new(db)])
         .enable_ctrlc_handler()
         .build()
         .dispatch()
