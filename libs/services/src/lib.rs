@@ -55,23 +55,19 @@ impl MusicLinkService {
             .iter()
             .find(|link| link.platform == MusicPlatform::YoutubeMusic)
             .and_then(|link| link.link.clone());
-        let mut found = false;
         for link in [&spotify_link, &apple_music_link, &youtube_music_link]
             .into_iter()
             .flatten()
         {
             let already = self.get_music_link_from_db(link, db).await?;
             if let Some(already) = already {
-                found = true;
                 let mut new_links = already.equivalent_links.clone();
-                new_links.push(link.clone());
+                new_links.push(original_link.clone());
                 let mut active: music_link::ActiveModel = already.into();
                 active.equivalent_links = ActiveValue::Set(new_links);
                 active.update(db).await?;
+                return Ok(());
             }
-        }
-        if found {
-            return Ok(());
         }
         let to_insert = music_link::ActiveModel {
             spotify_link: ActiveValue::Set(spotify_link),
