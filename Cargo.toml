@@ -3,6 +3,7 @@ members = [
   "apps/backend",
   "apps/telegram-bot",
   "libs/entities",
+  "libs/migrations",
   "libs/services",
 ]
 resolver = "2"
@@ -11,7 +12,6 @@ resolver = "2"
 anyhow = "=1.0.98"
 async-graphql = "=7.0.16"
 async-graphql-axum = "=7.0.16"
-async-trait = "0.1.88"
 axum = "=0.8.4"
 convert_case = "=0.8.0"
 dotenvy = "=0.15.7"
