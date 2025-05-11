@@ -38,7 +38,7 @@ async fn find_or_create_channel(
 }
 
 async fn find_or_create_telegram_user(
-    user_id: u64,
+    user_id: i64,
     db: &DatabaseConnection,
     telegram_channel_id: i64,
 ) -> Result<telegram_bot_user::Model, DbErr> {
@@ -46,7 +46,7 @@ async fn find_or_create_telegram_user(
     tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
     let user = TelegramBotUser::find()
         .filter(telegram_bot_user::Column::TelegramUserId.eq(user_id))
-        .filter(telegram_bot_user::Column::TelegramBotChannelId.eq(telegram_channel_id))
+        .filter(telegram_bot_user::Column::TelegramBotChannelId.eq(channel.id))
         .one(db)
         .await?;
     if let Some(user) = user {
@@ -140,15 +140,11 @@ pub async fn process_message(
     }
 
     if let Some(user) = &msg.from {
-        find_or_create_telegram_user(user.id.0, &db, msg.chat.id.0).await?;
+        find_or_create_telegram_user(user.id.0.try_into().unwrap(), &db, msg.chat.id.0).await?;
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
-        tracing::debug!(
-            "Adding attribution for user: {} ({})",
-            user.full_name(),
-            user.id.0
-        );
+        tracing::debug!("Adding attribution for user: {}", user.full_name());
         response.push_str(&format!("\n\nPosted by {}", username));
     }
 

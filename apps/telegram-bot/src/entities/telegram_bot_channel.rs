@@ -7,9 +7,9 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    pub created_at: DateTimeUtc,
     #[sea_orm(unique)]
     pub telegram_channel_id: i64,
-    pub created_at: DateTimeUtc,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

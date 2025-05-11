@@ -7,7 +7,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub telegram_user_id: u64,
+    pub telegram_user_id: i64,
     pub created_at: DateTimeUtc,
     pub telegram_bot_channel_id: Uuid,
 }
