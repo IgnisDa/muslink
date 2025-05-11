@@ -1,5 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
+use crate::entities::telegram_bot_channel;
 use convert_case::{Case, Casing};
 use regex::Regex;
 use sea_orm::{
@@ -7,11 +8,9 @@ use sea_orm::{
 };
 use service::{MusicLinkInput, MusicLinkService};
 use teloxide::{
-    types::User,
+    types::Message,
     utils::html::{link, user_mention},
 };
-
-use crate::{AppConfig, entities::telegram_bot_channel};
 
 pub async fn find_or_create_channel(
     db: &DatabaseConnection,
@@ -37,10 +36,18 @@ pub async fn find_or_create_channel(
 
 pub async fn process_message(
     text: String,
-    user: Option<User>,
-    _config: &AppConfig,
+    msg: &Message,
     db: Arc<DatabaseConnection>,
 ) -> Result<String, bool> {
+    let channel = match find_or_create_channel(&db, msg.chat.id.0).await {
+        Ok(channel) => channel,
+        Err(e) => {
+            tracing::error!("Failed to find or create channel: {}", e);
+            return Err(false);
+        }
+    };
+    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
+
     tracing::debug!("Processing message: {}", text);
 
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
@@ -109,7 +116,7 @@ pub async fn process_message(
         return Err(has_url);
     }
 
-    if let Some(user) = user {
+    if let Some(user) = &msg.from {
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));

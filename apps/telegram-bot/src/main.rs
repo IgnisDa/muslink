@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Bot::new(config.teloxide_token.clone());
 
     let handler = Update::filter_message().endpoint(
-        |bot: Bot, config: Arc<AppConfig>, db: Arc<DatabaseConnection>, msg: Message| async move {
+        |bot: Bot, db: Arc<DatabaseConnection>, msg: Message| async move {
             let user_name = msg
                 .from
                 .as_ref()
@@ -64,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             tracing::info!("Received message from {} in chat {}", user_name, chat_id);
             let text = msg.text().unwrap_or_default();
 
-            match process_message(text.to_string(), msg.from.clone(), &config, db.clone()).await {
+            match process_message(text.to_string(), &msg, db.clone()).await {
                 Ok(response) => {
                     tracing::info!("Sending music link response to chat {}", chat_id);
                     bot.send_message(msg.chat.id, response)
@@ -93,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("Starting Telegram bot dispatcher");
     Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![Arc::new(config), Arc::new(db)])
+        .dependencies(dptree::deps![Arc::new(db)])
         .enable_ctrlc_handler()
         .build()
         .dispatch()
