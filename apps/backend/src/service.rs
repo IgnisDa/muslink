@@ -5,15 +5,12 @@ use crate::models::graphql::{ResolveMusicLinkInput, ResolveMusicLinkResponse};
 
 pub struct Service {
     db: DatabaseConnection,
-    link_service: services::MusicLinkService,
 }
 
 impl Service {
     pub async fn new(db: DatabaseConnection) -> Self {
         tracing::debug!("Initializing backend service");
-        let link_service = services::MusicLinkService::new().await;
-        tracing::debug!("MusicLinkService initialized");
-        Self { db, link_service }
+        Self { db }
     }
 
     pub async fn resolve_music_link(
@@ -26,14 +23,15 @@ impl Service {
         );
         tracing::debug!("User country: {}", input.user_country);
 
+        let link_service = services::MusicLinkService::new().await;
+
         let service_input = services::MusicLinkInput {
             link: input.link.clone(),
             user_country: input.user_country.clone(),
         };
 
         tracing::debug!("Calling service to resolve music link");
-        let result = match self
-            .link_service
+        let result = match link_service
             .resolve_music_link(service_input, &self.db)
             .await
         {
