@@ -34,6 +34,9 @@ async fn graphiql() -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    #[cfg(debug_assertions)]
+    dotenvy::dotenv()?;
+
     tracing::info!("Starting Muslink Backend API");
     tracing_subscriber::registry()
         .with(

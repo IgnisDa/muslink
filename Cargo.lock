@@ -360,6 +360,7 @@ dependencies = [
  "async-graphql",
  "async-graphql-axum",
  "axum",
+ "dotenvy",
  "migrations",
  "schematic",
  "sea-orm",
