@@ -15,6 +15,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[derive(Serialize, Config)]
 #[config(env)]
 struct AppConfig {
+    #[setting(validate = not_empty, env = "DATABASE_URL")]
+    database_url: String,
     #[setting(validate = not_empty, env = "TELOXIDE_TOKEN")]
     teloxide_token: String,
 }
