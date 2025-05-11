@@ -14,6 +14,7 @@ use teloxide::{
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod entities;
 mod migrations;
 
 #[derive(Serialize, Config)]
