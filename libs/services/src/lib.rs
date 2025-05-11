@@ -4,6 +4,7 @@ use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    prelude::Expr, sea_query::PgFunc,
 };
 use strum::IntoEnumIterator;
 
@@ -34,7 +35,9 @@ impl MusicLinkService {
                 music_link::Column::SpotifyLink
                     .eq(link)
                     .or(music_link::Column::AppleMusicLink.eq(link))
-                    .or(music_link::Column::YoutubeMusicLink.eq(link)),
+                    .or(music_link::Column::YoutubeMusicLink.eq(link))
+                    .or(Expr::val(link)
+                        .eq(PgFunc::any(Expr::col(music_link::Column::EquivalentLinks)))),
             )
             .one(db)
             .await?;
