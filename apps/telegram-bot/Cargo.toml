@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-trait = { workspace = true }
 convert_case = { workspace = true }
 dotenvy = { workspace = true }
 dptree = { workspace = true }
 regex = { workspace = true }
 schematic = { workspace = true }
+sea-orm = { workspace = true }
+sea-orm-migration = { workspace = true }
 service = { path = "../../libs/service" }
 serde = { workspace = true }
 teloxide = { workspace = true }

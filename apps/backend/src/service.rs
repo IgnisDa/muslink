@@ -18,9 +18,12 @@ impl Service {
         &self,
         input: ResolveMusicLinkInput,
     ) -> Result<ResolveMusicLinkResponse> {
-        tracing::info!("Received music link resolution request for URL: {}", input.link);
+        tracing::info!(
+            "Received music link resolution request for URL: {}",
+            input.link
+        );
         tracing::debug!("User country: {}", input.user_country);
-        
+
         let service_input = service::MusicLinkInput {
             link: input.link.clone(),
             user_country: input.user_country.clone(),
@@ -29,9 +32,12 @@ impl Service {
         tracing::debug!("Calling service to resolve music link");
         let result = match self.link_service.resolve_music_link(service_input).await {
             Ok(result) => {
-                tracing::debug!("Successfully resolved music link, found {} platforms", result.found);
+                tracing::debug!(
+                    "Successfully resolved music link, found {} platforms",
+                    result.found
+                );
                 result
-            },
+            }
             Err(e) => {
                 tracing::warn!("Failed to resolve music link: {}", e);
                 return Err(e.into());
@@ -41,7 +47,11 @@ impl Service {
         tracing::debug!("Converting service response to GraphQL response");
         let response = crate::models::convert_to_graphql_response(result);
 
-        tracing::info!("Returning GraphQL response for URL: {} with {} platforms", input.link, response.found);
+        tracing::info!(
+            "Returning GraphQL response for URL: {} with {} platforms",
+            input.link,
+            response.found
+        );
         Ok(response)
     }
 }
