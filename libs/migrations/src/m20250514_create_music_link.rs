@@ -118,6 +118,16 @@ EXECUTE FUNCTION update_all_links();
                     .to_owned(),
             )
             .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_music_link_all_links")
+                    .table(MusicLink::Table)
+                    .col(MusicLink::AllLinks)
+                    .full_text()
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
 }
