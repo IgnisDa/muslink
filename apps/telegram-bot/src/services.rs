@@ -112,14 +112,17 @@ pub async fn process_message(
         return Ok(ProcessMessageResponse::HasUrlNoMusicLinksFound);
     }
 
-    let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
-    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
-
     if let Some(user) = &msg.from {
+        let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
+        tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
-        tracing::debug!("Adding attribution for user: {}", user.full_name());
+        tracing::debug!(
+            "Adding attribution for user: {} ({})",
+            user.full_name(),
+            user.id.0
+        );
         response.push_str(&format!("\n\nPosted by {}", username));
     }
 
