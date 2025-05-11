@@ -1,6 +1,6 @@
 use sea_orm_migration::prelude::*;
 
-use crate::m20250512_create_telegram_bot_channel::TelegramBotChannel;
+use super::m20250512_create_telegram_bot_channel::TelegramBotChannel;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
