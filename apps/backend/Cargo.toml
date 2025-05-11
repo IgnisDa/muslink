@@ -8,6 +8,9 @@ anyhow = { workspace = true }
 async-graphql = { workspace = true }
 async-graphql-axum = { workspace = true }
 axum = { workspace = true }
+migrations = { path = "../../libs/migrations" }
+schematic = { workspace = true }
+sea-orm = { workspace = true }
 serde = { workspace = true }
 services = { path = "../../libs/services" }
 strum = { workspace = true }
