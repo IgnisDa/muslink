@@ -7,6 +7,7 @@ pub struct Migration;
 pub enum MusicLink {
     Id,
     Table,
+    AllLinks,
     CreatedAt,
     SpotifyLink,
     AppleMusicLink,
@@ -29,19 +30,25 @@ impl MigrationTrait for Migration {
                             .primary_key()
                             .default(PgFunc::gen_random_uuid()),
                     )
-                    .col(ColumnDef::new(MusicLink::SpotifyLink).text())
-                    .col(ColumnDef::new(MusicLink::AppleMusicLink).text())
-                    .col(
-                        ColumnDef::new(MusicLink::EquivalentLinks)
-                            .array(ColumnType::Text)
-                            .not_null(),
-                    )
-                    .col(ColumnDef::new(MusicLink::YoutubeMusicLink).text())
                     .col(
                         ColumnDef::new(MusicLink::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        ColumnDef::new(MusicLink::EquivalentLinks)
+                            .array(ColumnType::Text)
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(MusicLink::SpotifyLink).text())
+                    .col(ColumnDef::new(MusicLink::AppleMusicLink).text())
+                    .col(ColumnDef::new(MusicLink::YoutubeMusicLink).text())
+                    .col(
+                        ColumnDef::new(MusicLink::AllLinks)
+                            .not_null()
+                            .array(ColumnType::Text)
+                            .extra("GENERATED ALWAYS AS (ARRAY[spotify_link, apple_music_link, youtube_music_link] || equivalent_links) STORED"),
                     )
                     .to_owned(),
             )
