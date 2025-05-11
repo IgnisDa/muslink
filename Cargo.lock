@@ -3067,6 +3067,7 @@ name = "services"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "entities",
  "nest_struct",
  "reqwest",
  "rust_iso3166",

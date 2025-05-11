@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
+entities = { path = "../entities" }
 nest_struct = { workspace = true }
 reqwest = { workspace = true }
 rust_iso3166 = { workspace = true }
