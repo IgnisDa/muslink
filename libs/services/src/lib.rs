@@ -3,8 +3,7 @@ use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter, prelude::Expr,
-    sea_query::PgFunc,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
 };
 use strum::IntoEnumIterator;
 
@@ -31,7 +30,12 @@ impl MusicLinkService {
         db: &DatabaseConnection,
     ) -> Result<Option<music_link::Model>> {
         let music_link = MusicLink::find()
-            .filter(Expr::val(link).eq(PgFunc::any(Expr::col(music_link::Column::EquivalentLinks))))
+            .filter(
+                music_link::Column::SpotifyLink
+                    .eq(link)
+                    .or(music_link::Column::AppleMusicLink.eq(link))
+                    .or(music_link::Column::YoutubeMusicLink.eq(link)),
+            )
             .one(db)
             .await?;
         Ok(music_link)
