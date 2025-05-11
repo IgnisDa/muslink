@@ -15,34 +15,25 @@ use teloxide::{
     utils::html::{link, user_mention},
 };
 
-async fn find_or_create_channel(
-    db: &DatabaseConnection,
-    telegram_channel_id: i64,
-) -> Result<telegram_bot_channel::Model, DbErr> {
-    let existing_channel = TelegramBotChannel::find()
-        .filter(telegram_bot_channel::Column::TelegramChannelId.eq(telegram_channel_id))
-        .one(db)
-        .await?;
-
-    if let Some(channel) = existing_channel {
-        return Ok(channel);
-    }
-
-    let new_channel = telegram_bot_channel::ActiveModel {
-        telegram_channel_id: Set(telegram_channel_id),
-        ..Default::default()
-    };
-
-    let result = new_channel.insert(db).await?;
-    Ok(result)
-}
-
 async fn find_or_create_telegram_user(
     user_id: i64,
     db: &DatabaseConnection,
     telegram_channel_id: i64,
 ) -> Result<telegram_bot_user::Model, DbErr> {
-    let channel = find_or_create_channel(&db, telegram_channel_id).await?;
+    let channel = 'chan: {
+        let existing_channel = TelegramBotChannel::find()
+            .filter(telegram_bot_channel::Column::TelegramChannelId.eq(telegram_channel_id))
+            .one(db)
+            .await?;
+        if let Some(channel) = existing_channel {
+            break 'chan channel;
+        }
+        let new_channel = telegram_bot_channel::ActiveModel {
+            telegram_channel_id: Set(telegram_channel_id),
+            ..Default::default()
+        };
+        new_channel.insert(db).await?
+    };
     tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
     let user = TelegramBotUser::find()
         .filter(telegram_bot_user::Column::TelegramUserId.eq(user_id))
