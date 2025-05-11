@@ -1785,15 +1785,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "migrations"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "sea-orm",
- "sea-orm-migration",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3573,11 +3564,14 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "convert_case 0.8.0",
  "dotenvy",
  "dptree",
  "regex",
  "schematic",
+ "sea-orm",
+ "sea-orm-migration",
  "serde",
  "service",
  "teloxide",
