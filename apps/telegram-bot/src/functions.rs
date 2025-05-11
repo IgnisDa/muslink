@@ -109,9 +109,9 @@ pub async fn process_message(
                 .iter()
                 .filter_map(|music_link| {
                     let platform = format!("{:?}", music_link.platform).to_case(Case::Title);
-                    music_link.data.as_ref().map(|data| {
-                        tracing::debug!("Found {} link: {}", platform, data.url);
-                        link(&data.url, &platform)
+                    music_link.link.as_ref().map(|found_link| {
+                        tracing::debug!("Found {} link: {}", platform, found_link);
+                        link(found_link, &platform)
                     })
                 })
                 .collect();
