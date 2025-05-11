@@ -1,6 +1,9 @@
 use std::{collections::HashSet, sync::Arc};
 
-use crate::entities::{prelude::TelegramBotChannel, telegram_bot_channel};
+use crate::entities::{
+    prelude::{TelegramBotChannel, TelegramBotUser},
+    telegram_bot_channel, telegram_bot_user,
+};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use sea_orm::{
@@ -12,7 +15,7 @@ use teloxide::{
     utils::html::{link, user_mention},
 };
 
-pub async fn find_or_create_channel(
+async fn find_or_create_channel(
     db: &DatabaseConnection,
     telegram_channel_id: i64,
 ) -> Result<telegram_bot_channel::Model, DbErr> {
@@ -31,6 +34,31 @@ pub async fn find_or_create_channel(
     };
 
     let result = new_channel.insert(db).await?;
+    Ok(result)
+}
+
+async fn find_or_create_telegram_user(
+    user_id: u64,
+    db: &DatabaseConnection,
+    telegram_channel_id: i64,
+) -> Result<telegram_bot_user::Model, DbErr> {
+    let channel = find_or_create_channel(&db, telegram_channel_id).await?;
+    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
+    let user = TelegramBotUser::find()
+        .filter(telegram_bot_user::Column::TelegramUserId.eq(user_id))
+        .filter(telegram_bot_user::Column::TelegramBotChannelId.eq(telegram_channel_id))
+        .one(db)
+        .await?;
+    if let Some(user) = user {
+        return Ok(user);
+    }
+    let new_user = telegram_bot_user::ActiveModel {
+        telegram_user_id: Set(user_id),
+        telegram_bot_channel_id: Set(channel.id),
+        assigned_emoji: Set("".to_string()),
+        ..Default::default()
+    };
+    let result = new_user.insert(db).await?;
     Ok(result)
 }
 
@@ -113,8 +141,7 @@ pub async fn process_message(
     }
 
     if let Some(user) = &msg.from {
-        let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
-        tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
+        find_or_create_telegram_user(user.id.0, &db, msg.chat.id.0).await?;
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
