@@ -55,7 +55,6 @@ async fn find_or_create_telegram_user(
     let new_user = telegram_bot_user::ActiveModel {
         telegram_user_id: Set(user_id),
         telegram_bot_channel_id: Set(channel.id),
-        assigned_emoji: Set("".to_string()),
         ..Default::default()
     };
     let result = new_user.insert(db).await?;

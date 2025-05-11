@@ -10,7 +10,6 @@ enum TelegramBotUser {
     Id,
     Table,
     CreatedAt,
-    AssignedEmoji,
     TelegramUserId,
     TelegramBotChannelId,
 }
@@ -41,11 +40,6 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotUser::AssignedEmoji)
-                            .string_len(8)
-                            .not_null(),
-                    )
-                    .col(
                         ColumnDef::new(TelegramBotUser::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
@@ -72,19 +66,6 @@ impl MigrationTrait for Migration {
                     .name("idx-telegram_bot_user-channel_user_unique")
                     .col(TelegramBotUser::TelegramBotChannelId)
                     .col(TelegramBotUser::TelegramUserId)
-                    .unique()
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_index(
-                Index::create()
-                    .table(TelegramBotUser::Table)
-                    .name("idx-telegram_bot_user-channel_user_emoji_unique")
-                    .col(TelegramBotUser::TelegramBotChannelId)
-                    .col(TelegramBotUser::TelegramUserId)
-                    .col(TelegramBotUser::AssignedEmoji)
                     .unique()
                     .to_owned(),
             )
