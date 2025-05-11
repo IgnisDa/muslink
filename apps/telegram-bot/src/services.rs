@@ -47,9 +47,6 @@ pub async fn process_message(
 ) -> Result<ProcessMessageResponse, DbErr> {
     tracing::debug!("Processing message: {}", text);
 
-    let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
-    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
-
     let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
     let urls: HashSet<_> = url_regex
         .find_iter(&text)
@@ -114,6 +111,9 @@ pub async fn process_message(
         tracing::debug!("No music links found for any URLs");
         return Ok(ProcessMessageResponse::HasUrlNoMusicLinksFound);
     }
+
+    let channel = find_or_create_channel(&db, msg.chat.id.0).await?;
+    tracing::debug!("Found or created channel: {}", channel.telegram_channel_id);
 
     if let Some(user) = &msg.from {
         let username = user
