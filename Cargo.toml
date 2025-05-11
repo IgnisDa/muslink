@@ -1,5 +1,5 @@
 [workspace]
-members = ["apps/backend", "apps/telegram-bot", "libs/service"]
+members = ["apps/backend", "apps/telegram-bot", "libs/service", "libs/entities"]
 resolver = "2"
 
 [workspace.dependencies]

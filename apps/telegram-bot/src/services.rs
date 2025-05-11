@@ -1,10 +1,10 @@
 use std::{collections::HashSet, sync::Arc};
 
-use crate::entities::{
+use convert_case::{Case, Casing};
+use entities::{
     prelude::{TelegramBotChannel, TelegramBotUser},
     telegram_bot_channel, telegram_bot_user,
 };
-use convert_case::{Case, Casing};
 use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,

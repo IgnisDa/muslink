@@ -8,6 +8,7 @@ async-trait = { workspace = true }
 convert_case = { workspace = true }
 dotenvy = { workspace = true }
 dptree = { workspace = true }
+entities = { path = "../../libs/entities" }
 regex = { workspace = true }
 schematic = { workspace = true }
 sea-orm = { workspace = true }
