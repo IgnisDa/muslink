@@ -9,6 +9,7 @@ pub struct Model {
     pub id: Uuid,
     pub created_at: DateTimeUtc,
     pub spotify_link: Option<String>,
+    pub equivalent_links: Vec<String>,
     pub apple_music_link: Option<String>,
     pub youtube_music_link: Option<String>,
 }

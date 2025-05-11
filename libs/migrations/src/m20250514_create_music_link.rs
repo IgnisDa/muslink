@@ -10,6 +10,7 @@ pub enum MusicLink {
     CreatedAt,
     SpotifyLink,
     AppleMusicLink,
+    EquivalentLinks,
     YoutubeMusicLink,
 }
 
@@ -30,6 +31,11 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(MusicLink::SpotifyLink).text())
                     .col(ColumnDef::new(MusicLink::AppleMusicLink).text())
+                    .col(
+                        ColumnDef::new(MusicLink::EquivalentLinks)
+                            .array(ColumnType::Text)
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(MusicLink::YoutubeMusicLink).text())
                     .col(
                         ColumnDef::new(MusicLink::CreatedAt)
