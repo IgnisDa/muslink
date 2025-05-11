@@ -97,6 +97,7 @@ EXECUTE FUNCTION update_all_links();
                     .name("idx_music_link_spotify_link")
                     .table(MusicLink::Table)
                     .col(MusicLink::SpotifyLink)
+                    .unique()
                     .to_owned(),
             )
             .await?;
@@ -106,6 +107,7 @@ EXECUTE FUNCTION update_all_links();
                     .name("idx_music_link_apple_music_link")
                     .table(MusicLink::Table)
                     .col(MusicLink::AppleMusicLink)
+                    .unique()
                     .to_owned(),
             )
             .await?;
@@ -115,6 +117,7 @@ EXECUTE FUNCTION update_all_links();
                     .name("idx_music_link_youtube_music_link")
                     .table(MusicLink::Table)
                     .col(MusicLink::YoutubeMusicLink)
+                    .unique()
                     .to_owned(),
             )
             .await?;
