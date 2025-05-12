@@ -46,8 +46,7 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(TelegramBotMusicShare::TelegramMessageId)
                             .big_integer()
-                            .not_null()
-                            .unique_key(),
+                            .not_null(),
                     )
                     .col(
                         ColumnDef::new(TelegramBotMusicShare::TelegramBotUserId)
