@@ -4,4 +4,5 @@ pub mod prelude;
 
 pub mod music_link;
 pub mod telegram_bot_channel;
+pub mod telegram_bot_music_share;
 pub mod telegram_bot_user;
