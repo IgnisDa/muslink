@@ -3,7 +3,8 @@ use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter, prelude::Expr,
+    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter,
+    prelude::{Expr, Uuid},
     sea_query::PgFunc,
 };
 use strum::IntoEnumIterator;
@@ -42,7 +43,7 @@ impl MusicLinkService {
         original_link: &String,
         db: &DatabaseConnection,
         links: &Vec<MusicLinkData>,
-    ) -> Result<()> {
+    ) -> Result<Uuid> {
         let spotify_link = links
             .iter()
             .find(|link| link.platform == MusicPlatform::Spotify)
@@ -65,8 +66,8 @@ impl MusicLinkService {
                 new_links.push(original_link.clone());
                 let mut active: music_link::ActiveModel = already.into();
                 active.equivalent_links = ActiveValue::Set(new_links);
-                active.update(db).await?;
-                return Ok(());
+                let updated = active.update(db).await?;
+                return Ok(updated.id);
             }
         }
         let to_insert = music_link::ActiveModel {
@@ -76,8 +77,8 @@ impl MusicLinkService {
             equivalent_links: ActiveValue::Set(vec![original_link.clone()]),
             ..Default::default()
         };
-        to_insert.insert(db).await?;
-        Ok(())
+        let inserted = to_insert.insert(db).await?;
+        Ok(inserted.id)
     }
 
     pub async fn resolve_music_link(
@@ -116,6 +117,7 @@ impl MusicLinkService {
             return Ok(MusicLinkResponse {
                 found,
                 collected_links,
+                id: music_link.id,
             });
         }
 
@@ -158,12 +160,12 @@ impl MusicLinkService {
             })
             .collect();
 
-        if found > 0 {
-            self.save_music_link_to_db(&input.link, db, &collected_links)
-                .await?;
-        }
+        let id = self
+            .save_music_link_to_db(&input.link, db, &collected_links)
+            .await?;
 
         let response = MusicLinkResponse {
+            id,
             found,
             collected_links,
         };
