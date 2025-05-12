@@ -3,7 +3,7 @@ use std::{collections::HashSet, sync::Arc};
 use convert_case::{Case, Casing};
 use entities::{
     prelude::{TelegramBotChannel, TelegramBotUser},
-    telegram_bot_channel, telegram_bot_user,
+    telegram_bot_channel, telegram_bot_music_share, telegram_bot_user,
 };
 use regex::Regex;
 use sea_orm::{
@@ -138,7 +138,6 @@ pub async fn process_message(
     }
 
     if let Some(user) = &msg.from {
-        find_or_create_telegram_user(user.id.0.try_into().unwrap(), &db, msg.chat.id.0).await?;
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
@@ -158,5 +157,22 @@ pub async fn after_process_message(
     db: &DatabaseConnection,
     music_link_ids: Vec<Uuid>,
 ) -> Result<(), DbErr> {
+    let Some(user) = &message.from else {
+        tracing::warn!("No user found in message");
+        return Ok(());
+    };
+    tracing::debug!("Processing music link ids: {:?}", music_link_ids);
+    let user =
+        find_or_create_telegram_user(user.id.0.try_into().unwrap(), db, message.chat.id.0).await?;
+    for music_link_id in music_link_ids {
+        let to_insert: telegram_bot_music_share::ActiveModel =
+            telegram_bot_music_share::ActiveModel {
+                music_link_id: Set(music_link_id),
+                telegram_bot_user_id: Set(user.id),
+                telegram_message_id: Set(message.id.0.try_into().unwrap()),
+                ..Default::default()
+            };
+        to_insert.insert(db).await?;
+    }
     Ok(())
 }
