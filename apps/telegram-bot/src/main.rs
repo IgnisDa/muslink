@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use functions::{ProcessMessageResponse, process_message};
+use functions::{ProcessMessageResponse, after_process_message, process_message};
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
@@ -83,6 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .await?;
                         tracing::debug!("Deleting original message");
                         bot.delete_message(msg.chat.id, msg.id).await?;
+                        after_process_message(&msg, &db, music_link_ids).await.ok();
                     }
                 },
             };

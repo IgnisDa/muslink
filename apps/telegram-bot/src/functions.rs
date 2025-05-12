@@ -152,3 +152,11 @@ pub async fn process_message(
         text: response,
     })
 }
+
+pub async fn after_process_message(
+    message: &Message,
+    db: &DatabaseConnection,
+    music_link_ids: Vec<Uuid>,
+) -> Result<(), DbErr> {
+    Ok(())
+}
