@@ -61,7 +61,8 @@ impl MigrationTrait for Migration {
                                 TelegramBotMusicShare::Table,
                                 TelegramBotMusicShare::MusicLinkId,
                             )
-                            .to(MusicLink::Table, MusicLink::Id),
+                            .to(MusicLink::Table, MusicLink::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -70,7 +71,8 @@ impl MigrationTrait for Migration {
                                 TelegramBotMusicShare::Table,
                                 TelegramBotMusicShare::TelegramBotUserId,
                             )
-                            .to(TelegramBotUser::Table, TelegramBotUser::Id),
+                            .to(TelegramBotUser::Table, TelegramBotUser::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )
