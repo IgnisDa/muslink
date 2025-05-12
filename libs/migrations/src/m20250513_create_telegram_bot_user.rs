@@ -6,7 +6,7 @@ use super::m20250512_create_telegram_bot_channel::TelegramBotChannel;
 pub struct Migration;
 
 #[derive(Iden)]
-enum TelegramBotUser {
+pub enum TelegramBotUser {
     Id,
     Table,
     CreatedAt,
