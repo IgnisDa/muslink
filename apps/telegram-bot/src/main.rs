@@ -52,14 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let handler = Update::filter_message().endpoint(
         |bot: Bot, db: Arc<DatabaseConnection>, msg: Message| async move {
-            let user_name = msg
-                .from
-                .as_ref()
-                .map(|user| user.full_name())
-                .unwrap_or_else(|| "Unknown".to_string());
             let chat_id = msg.chat.id;
-
-            tracing::info!("Received message from {} in chat {}", user_name, chat_id);
             let text = msg.text().unwrap_or_default();
 
             match process_message(text.to_string(), &msg, db.clone()).await {
@@ -69,7 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(response) => match response {
                     ProcessMessageResponse::NoUrlDetected => {
                         tracing::debug!("No URL detected in message, ignoring");
-                        return Ok(());
                     }
                     ProcessMessageResponse::HasUrlNoMusicLinksFound => {
                         tracing::debug!(
@@ -80,7 +72,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 emoji: "😢".to_string(),
                             }])
                             .await?;
-                        return Ok(());
                     }
                     ProcessMessageResponse::HasUrlMusicLinksFound(response) => {
                         tracing::info!("Sending music link response to chat {}", chat_id);
@@ -89,10 +80,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .await?;
                         tracing::debug!("Deleting original message");
                         bot.delete_message(msg.chat.id, msg.id).await?;
-                        return Ok(());
                     }
                 },
             };
+
             respond(())
         },
     );
