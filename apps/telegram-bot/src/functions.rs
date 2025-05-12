@@ -8,6 +8,7 @@ use entities::{
 use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,
+    prelude::Uuid,
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
@@ -55,7 +56,10 @@ async fn find_or_create_telegram_user(
 pub enum ProcessMessageResponse {
     NoUrlDetected,
     HasUrlNoMusicLinksFound,
-    HasUrlMusicLinksFound(String),
+    HasUrlMusicLinksFound {
+        text: String,
+        music_link_ids: Vec<Uuid>,
+    },
 }
 
 pub async fn process_message(
@@ -81,6 +85,7 @@ pub async fn process_message(
     let music_service = MusicLinkService::new().await;
     tracing::debug!("MusicLinkService initialized");
 
+    let mut music_link_ids = Vec::new();
     for url in urls {
         tracing::debug!("Processing URL: {}", url);
         let service_input = MusicLinkInput {
@@ -98,6 +103,8 @@ pub async fn process_message(
                 continue;
             }
         };
+
+        music_link_ids.push(result.id);
 
         if result.found > 0 {
             tracing::debug!(
@@ -140,5 +147,8 @@ pub async fn process_message(
     }
 
     tracing::debug!("Returning response with {} characters", response.len());
-    Ok(ProcessMessageResponse::HasUrlMusicLinksFound(response))
+    Ok(ProcessMessageResponse::HasUrlMusicLinksFound {
+        music_link_ids,
+        text: response,
+    })
 }

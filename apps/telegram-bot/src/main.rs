@@ -73,9 +73,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }])
                             .await?;
                     }
-                    ProcessMessageResponse::HasUrlMusicLinksFound(response) => {
+                    ProcessMessageResponse::HasUrlMusicLinksFound {
+                        text,
+                        music_link_ids,
+                    } => {
                         tracing::info!("Sending music link response to chat {}", chat_id);
-                        bot.send_message(msg.chat.id, response)
+                        bot.send_message(msg.chat.id, text)
                             .parse_mode(ParseMode::Html)
                             .await?;
                         tracing::debug!("Deleting original message");
