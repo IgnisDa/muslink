@@ -53,7 +53,8 @@ impl MigrationTrait for Migration {
                                 TelegramBotUser::TelegramBotChannelId,
                             )
                             .to(TelegramBotChannel::Table, TelegramBotChannel::Id)
-                            .on_delete(ForeignKeyAction::Cascade),
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )
