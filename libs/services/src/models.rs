@@ -18,21 +18,15 @@ pub struct MusicLinkInput {
 }
 
 #[derive(Debug)]
-pub struct MusicLinkPlatformData {
-    pub id: String,
-    pub url: String,
-}
-
-#[derive(Debug)]
-pub struct MusicLink {
+pub struct MusicLinkData {
+    pub link: Option<String>,
     pub platform: MusicPlatform,
-    pub data: Option<MusicLinkPlatformData>,
 }
 
 #[derive(Debug)]
 pub struct MusicLinkResponse {
     pub found: u8,
-    pub collected_links: Vec<MusicLink>,
+    pub collected_links: Vec<MusicLinkData>,
 }
 
 pub mod providers {

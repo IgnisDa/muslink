@@ -360,8 +360,12 @@ dependencies = [
  "async-graphql",
  "async-graphql-axum",
  "axum",
+ "dotenvy",
+ "migrations",
+ "schematic",
+ "sea-orm",
  "serde",
- "service",
+ "services",
  "strum 0.27.1",
  "tokio",
  "tracing",
@@ -908,6 +912,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "entities"
+version = "0.1.0"
+dependencies = [
+ "sea-orm",
 ]
 
 [[package]]
@@ -1782,6 +1793,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
+]
+
+[[package]]
+name = "migrations"
+version = "0.1.0"
+dependencies = [
+ "sea-orm-migration",
 ]
 
 [[package]]
@@ -3045,13 +3063,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "service"
+name = "services"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "entities",
  "nest_struct",
  "reqwest",
  "rust_iso3166",
+ "sea-orm",
  "serde",
  "strum 0.27.1",
  "tracing",
@@ -3564,16 +3584,17 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "convert_case 0.8.0",
  "dotenvy",
  "dptree",
+ "entities",
+ "migrations",
  "regex",
  "schematic",
  "sea-orm",
  "sea-orm-migration",
  "serde",
- "service",
+ "services",
  "teloxide",
  "tokio",
  "tracing",

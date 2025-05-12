@@ -20,15 +20,9 @@ pub mod graphql {
     }
 
     #[derive(SimpleObject, Debug)]
-    pub struct ResolveMusicLinkResponseLinkPlatformData {
-        pub id: String,
-        pub url: String,
-    }
-
-    #[derive(SimpleObject, Debug)]
     pub struct ResolveMusicLinkResponseLink {
+        pub link: Option<String>,
         pub platform: ResolveMusicLinkResponseLinkPlatform,
-        pub data: Option<ResolveMusicLinkResponseLinkPlatformData>,
     }
 
     #[derive(SimpleObject, Debug)]
@@ -39,32 +33,28 @@ pub mod graphql {
 }
 
 pub fn convert_to_graphql_response(
-    service_response: service::MusicLinkResponse,
+    service_response: services::MusicLinkResponse,
 ) -> graphql::ResolveMusicLinkResponse {
     let collected_links = service_response
         .collected_links
         .into_iter()
         .map(|link| {
             let platform = match link.platform {
-                service::MusicPlatform::Spotify => {
+                services::MusicPlatform::Spotify => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::Spotify
                 }
-                service::MusicPlatform::AppleMusic => {
+                services::MusicPlatform::AppleMusic => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::AppleMusic
                 }
-                service::MusicPlatform::YoutubeMusic => {
+                services::MusicPlatform::YoutubeMusic => {
                     graphql::ResolveMusicLinkResponseLinkPlatform::YoutubeMusic
                 }
             };
 
-            let data = link
-                .data
-                .map(|d| graphql::ResolveMusicLinkResponseLinkPlatformData {
-                    id: d.id,
-                    url: d.url,
-                });
-
-            graphql::ResolveMusicLinkResponseLink { platform, data }
+            graphql::ResolveMusicLinkResponseLink {
+                platform,
+                link: link.link,
+            }
         })
         .collect();
 

@@ -1,15 +1,15 @@
 use std::{collections::HashSet, sync::Arc};
 
-use crate::entities::{
+use convert_case::{Case, Casing};
+use entities::{
     prelude::{TelegramBotChannel, TelegramBotUser},
     telegram_bot_channel, telegram_bot_user,
 };
-use convert_case::{Case, Casing};
 use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,
 };
-use service::{MusicLinkInput, MusicLinkService};
+use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     types::Message,
     utils::html::{link, user_mention},
@@ -88,7 +88,7 @@ pub async fn process_message(
             user_country: "US".to_string(),
         };
 
-        let result = match music_service.resolve_music_link(service_input).await {
+        let result = match music_service.resolve_music_link(service_input, &db).await {
             Ok(result) => {
                 tracing::debug!("Successfully resolved music link, found: {}", result.found);
                 result
@@ -109,9 +109,9 @@ pub async fn process_message(
                 .iter()
                 .filter_map(|music_link| {
                     let platform = format!("{:?}", music_link.platform).to_case(Case::Title);
-                    music_link.data.as_ref().map(|data| {
-                        tracing::debug!("Found {} link: {}", platform, data.url);
-                        link(&data.url, &platform)
+                    music_link.link.as_ref().map(|found_link| {
+                        tracing::debug!("Found {} link: {}", platform, found_link);
+                        link(found_link, &platform)
                     })
                 })
                 .collect();

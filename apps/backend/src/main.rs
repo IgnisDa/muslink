@@ -8,7 +8,11 @@ use axum::{
     response::{self, IntoResponse},
     routing::get,
 };
+use migrations::MigratorTrait;
 use resolver::QueryRoot;
+use schematic::{Config, ConfigLoader, validate::not_empty};
+use sea_orm::Database;
+use serde::Serialize;
 use service::Service;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -17,12 +21,23 @@ mod models;
 mod resolver;
 mod service;
 
+#[derive(Serialize, Config)]
+#[config(env)]
+struct AppConfig {
+    #[setting(validate = not_empty, env = "DATABASE_URL")]
+    database_url: String,
+}
+
 async fn graphiql() -> impl IntoResponse {
     response::Html(graphiql_source("/", None))
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    #[cfg(debug_assertions)]
+    dotenvy::dotenv()?;
+
+    tracing::info!("Starting Muslink Backend API");
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -31,10 +46,19 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    tracing::info!("Starting Muslink Backend API");
+    let config = ConfigLoader::<AppConfig>::new().load()?.config;
+    tracing::info!("Configuration loaded successfully");
+
+    tracing::info!("Connecting to database...");
+    let db = Database::connect(&config.database_url).await?;
+    tracing::info!("Database connection established");
+
+    tracing::info!("Running database migrations...");
+    migrations::Migrator::up(&db, None).await?;
+    tracing::info!("Database migrations completed");
 
     tracing::debug!("Initializing service");
-    let service = Service::new().await;
+    let service = Service::new(db).await;
 
     tracing::debug!("Building GraphQL schema");
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)

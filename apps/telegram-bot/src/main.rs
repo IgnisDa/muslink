@@ -1,19 +1,17 @@
 use std::sync::Arc;
 
+use functions::{ProcessMessageResponse, process_message};
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
-use services::{ProcessMessageResponse, process_message};
 use teloxide::{
     prelude::*,
     types::{ParseMode, ReactionType},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod entities;
-mod migrations;
-mod services;
+mod functions;
 
 #[derive(Serialize, Config)]
 #[config(env)]
