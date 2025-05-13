@@ -12,6 +12,7 @@ use crate::AppState;
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
 enum SentimentResponseMood {
     Neutral,
     Positive,
