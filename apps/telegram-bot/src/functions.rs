@@ -200,6 +200,7 @@ pub async fn after_process_message(
 async fn process_reaction(
     text: String,
     db: &DatabaseConnection,
+    telegram_channel_id: i64,
     reply_to_message_id: i32,
     reaction_text_message_id: Option<i64>,
 ) -> Result<(), DbErr> {
@@ -234,6 +235,7 @@ pub async fn process_text_reaction(
     process_reaction(
         message.text().unwrap_or_default().to_string(),
         db,
+        message.chat.id.0,
         reply_to_message.id.0,
         Some(message.id.0.try_into().unwrap()),
     )
@@ -251,6 +253,13 @@ pub async fn process_emoji_reaction(
         .filter_map(|t| t.emoji().cloned())
         .collect::<Vec<String>>()
         .join(",");
-    process_reaction(new_reaction, db, reaction.message_id.0, None).await?;
+    process_reaction(
+        new_reaction,
+        db,
+        reaction.chat.id.0,
+        reaction.message_id.0,
+        None,
+    )
+    .await?;
     Ok(())
 }
