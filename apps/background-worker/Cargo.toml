@@ -8,6 +8,9 @@ apalis = { workspace = true }
 apalis-cron = { workspace = true }
 chrono = { workspace = true }
 dotenvy = { workspace = true }
+schematic = { workspace = true }
+serde = { workspace = true }
+sea-orm = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }
