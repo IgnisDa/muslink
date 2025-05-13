@@ -13,7 +13,6 @@ resolver = "2"
 anyhow = "=1.0.98"
 apalis = { version = "=0.7.1", features = ["catch-panic"] }
 apalis-cron = "=0.7.1"
-apalis-sql = { version = "=0.7.1", features = ["sqlite", "tokio-comp"] }
 async-graphql = "=7.0.16"
 async-graphql-axum = "=7.0.16"
 axum = "=0.8.4"
