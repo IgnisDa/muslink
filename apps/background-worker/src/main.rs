@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .catch_panic()
                 .data(state)
                 .backend(CronStream::new_with_timezone(
-                    Schedule::from_str("0 * * * * *").unwrap(),
+                    Schedule::from_str("0 */5 * * * *").unwrap(),
                     Local,
                 ))
                 .build_fn(background_worker_job),
