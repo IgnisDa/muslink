@@ -15,8 +15,12 @@ Use one of the following sentiment labels:
 - "negative": the reaction expresses dislike, disapproval, frustration, sarcasm, or criticism.
 - "unrelated": the reaction text does not clearly reflect a sentiment about the music, appears random, or is off-topic.
 
-Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
-Do not include any explanation or commentary.
+### Important Notes:
+
+- Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
+- Response MUST be valid JSON.
+- Do not wrap your response in ```json or ```.
+- Do not include any explanation or commentary.
 
 ### Example Input:
 
