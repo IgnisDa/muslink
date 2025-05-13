@@ -8,6 +8,7 @@ use apalis_cron::{CronContext, CronStream, Schedule};
 use chrono::Local;
 use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_reaction};
 use migrations::MigratorTrait;
+use openai_api_rs::v1::api::OpenAIClient;
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Serialize;
@@ -102,11 +103,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
-    let unrated = TelegramBotMusicShareReaction::find()
+    let Ok(unrated) = TelegramBotMusicShareReaction::find()
         .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
         .all(&state.db)
         .await
-        .ok();
-    dbg!(&unrated);
+    else {
+        tracing::error!("Failed to fetch unrated reactions");
+        return Ok(());
+    };
+    let Ok(mut client) = OpenAIClient::builder()
+        .with_endpoint("https://openrouter.ai/api/v1")
+        .with_api_key(state.config.open_router_api_key.clone())
+        .build()
+    else {
+        tracing::error!("Failed to build OpenAI client");
+        return Ok(());
+    };
     Ok(())
 }
