@@ -62,6 +62,15 @@ pub enum ProcessMessageResponse {
     },
 }
 
+fn get_regex_for_url() -> Regex {
+    Regex::new(r"https?://[^\s]+").unwrap()
+}
+
+pub fn has_url_in_message(message: &Message) -> bool {
+    let url_regex = get_regex_for_url();
+    url_regex.find(message.text().unwrap_or_default()).is_some()
+}
+
 pub async fn process_message(
     text: String,
     msg: &Message,
@@ -69,8 +78,7 @@ pub async fn process_message(
 ) -> Result<ProcessMessageResponse, DbErr> {
     tracing::debug!("Processing message: {}", text);
 
-    let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
-    let urls: HashSet<_> = url_regex
+    let urls: HashSet<_> = get_regex_for_url()
         .find_iter(&text)
         .map(|m| m.as_str().to_string())
         .collect();
