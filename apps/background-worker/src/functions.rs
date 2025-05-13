@@ -10,6 +10,12 @@ use crate::AppState;
 
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
+#[derive(Debug, serde::Deserialize)]
+struct SentimentResponse {
+    id: String,
+    sentiment: String,
+}
+
 pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let Ok(unrated) = TelegramBotMusicShareReaction::find()
         .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
@@ -61,6 +67,11 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to send request to OpenAI");
         return Ok(());
     };
-    dbg!(&result);
+    let Some(response_text) = result.choices[0].message.content.as_ref() else {
+        tracing::error!("Failed to get response from OpenAI");
+        return Ok(());
+    };
+    let parsed: Vec<SentimentResponse> = serde_json::from_str(response_text).unwrap();
+    dbg!(&parsed);
     Ok(())
 }
