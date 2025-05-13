@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use functions::{
-    ProcessMessageResponse, after_process_message, has_url_in_message, process_message,
+    ProcessMessageResponse, after_process_message, has_url_in_message, process_music_share,
 };
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let chat_id = msg.chat.id;
                 let text = msg.text().unwrap_or_default();
 
-                match process_message(text.to_string(), &msg, db.clone()).await {
+                match process_music_share(text.to_string(), &msg, db.clone()).await {
                     Err(e) => {
                         tracing::error!("Failed to process message: {}", e);
                     }
