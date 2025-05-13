@@ -63,17 +63,26 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
             },
         ],
     );
-    let Ok(result) = client.chat_completion(req).await else {
-        tracing::error!("Failed to send request to OpenAI");
-        return Ok(());
+    let result = match client.chat_completion(req).await {
+        Ok(result) => result,
+        Err(e) => {
+            tracing::error!("Failed to send request to OpenAI: {}", e);
+            return Ok(());
+        }
     };
-    let Some(response_text) = result.choices[0].message.content.as_ref() else {
-        tracing::error!("Failed to get response from OpenAI");
-        return Ok(());
+    let response_text = match result.choices[0].message.content.as_ref() {
+        Some(text) => text,
+        None => {
+            tracing::error!("Failed to get response from OpenAI");
+            return Ok(());
+        }
     };
-    let Ok(parsed) = serde_json::from_str::<Vec<SentimentResponse>>(response_text) else {
-        tracing::error!("Failed to parse response from OpenAI");
-        return Ok(());
+    let parsed = match serde_json::from_str::<Vec<SentimentResponse>>(response_text) {
+        Ok(val) => val,
+        Err(e) => {
+            tracing::error!("Failed to parse response from OpenAI: {}", e);
+            return Ok(());
+        }
     };
     dbg!(&parsed);
     Ok(())
