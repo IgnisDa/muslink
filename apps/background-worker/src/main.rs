@@ -19,6 +19,9 @@ async fn schedule_job(_job: Reminder, ctx: CronContext<Local>) -> Result<(), Err
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(debug_assertions)]
+    dotenvy::dotenv()?;
+
     let worker = Monitor::new()
         .register(
             WorkerBuilder::new("schedule-job")

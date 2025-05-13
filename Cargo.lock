@@ -404,6 +404,7 @@ dependencies = [
  "apalis",
  "apalis-cron",
  "chrono",
+ "dotenvy",
  "tokio",
  "tower",
 ]

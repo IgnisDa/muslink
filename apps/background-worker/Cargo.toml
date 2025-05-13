@@ -7,5 +7,6 @@ edition = "2024"
 apalis = { workspace = true }
 apalis-cron = { workspace = true }
 chrono = { workspace = true }
+dotenvy = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }
