@@ -2,7 +2,7 @@ use std::{collections::HashSet, sync::Arc};
 
 use convert_case::{Case, Casing};
 use entities::{
-    prelude::{TelegramBotChannel, TelegramBotUser},
+    prelude::{TelegramBotChannel, TelegramBotMusicShare, TelegramBotUser},
     telegram_bot_channel, telegram_bot_music_share, telegram_bot_user,
 };
 use regex::Regex;
@@ -203,6 +203,9 @@ pub async fn process_text_reaction(
         tracing::warn!("No reply to message found");
         return Ok(());
     };
-    dbg!(&reply_to_message);
+    let shares_linked = TelegramBotMusicShare::find()
+        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message.id.0))
+        .all(db)
+        .await?;
     Ok(())
 }
