@@ -6,21 +6,22 @@ use openai_api_rs::v1::{
 };
 use schematic::{Config, ConfigEnum};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::AppState;
 
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
-#[derive(Debug, Deserialize, Clone, ConfigEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, ConfigEnum, Deserialize, Serialize, Default)]
 enum SentimentResponseMood {
     Neutral,
     Positive,
     Negative,
+    #[default]
     Unrelated,
 }
 
-#[derive(Debug, Deserialize, Clone, Config)]
+#[derive(Debug, Clone, PartialEq, Eq, Config, Deserialize, Serialize)]
 struct SentimentResponse {
     id: String,
     sentiment: SentimentResponseMood,
