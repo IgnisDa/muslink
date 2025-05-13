@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bot = Bot::new(config.teloxide_token.clone());
 
-    let handler = Update::filter_message().endpoint(
+    let music_share_handler = Update::filter_message().endpoint(
         |bot: Bot, db: Arc<DatabaseConnection>, msg: Message| async move {
             let chat_id = msg.chat.id;
             let text = msg.text().unwrap_or_default();
@@ -93,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     tracing::info!("Starting Telegram bot dispatcher");
-    Dispatcher::builder(bot, handler)
+    Dispatcher::builder(bot, music_share_handler)
         .dependencies(dptree::deps![Arc::new(db)])
         .enable_ctrlc_handler()
         .build()
