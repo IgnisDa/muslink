@@ -21,8 +21,8 @@ mod functions;
 struct AppConfig {
     #[setting(validate = not_empty, env = "DATABASE_URL")]
     database_url: String,
-    #[setting(validate = not_empty, env = "OPEN_ROUTER_API_KEY")]
-    open_router_api_key: String,
+    #[setting(validate = not_empty, env = "LLM_API_TOKEN")]
+    llm_api_token: String,
 }
 
 #[derive(Clone)]
