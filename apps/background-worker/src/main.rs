@@ -10,7 +10,7 @@ use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_
 use migrations::MigratorTrait;
 use openai_api_rs::v1::api::OpenAIClient;
 use schematic::{Config, ConfigLoader, validate::not_empty};
-use sea_orm::{ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use serde::Serialize;
 use tokio::join;
 use tower::load_shed::LoadShedLayer;
@@ -107,6 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let Ok(unrated) = TelegramBotMusicShareReaction::find()
         .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
+        .limit(5)
         .all(&state.db)
         .await
     else {
