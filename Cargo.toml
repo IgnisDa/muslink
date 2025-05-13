@@ -11,9 +11,13 @@ resolver = "2"
 
 [workspace.dependencies]
 anyhow = "=1.0.98"
+apalis = { version = "=0.7.1", features = ["catch-panic"] }
+apalis-cron = "=0.7.1"
+apalis-sql = { version = "=0.7.1", features = ["sqlite", "tokio-comp"] }
 async-graphql = "=7.0.16"
 async-graphql-axum = "=7.0.16"
 axum = "=0.8.4"
+chrono = "=0.4.40"
 convert_case = "=0.8.0"
 dotenvy = "=0.15.7"
 dptree = "=0.3.0"
@@ -45,5 +49,6 @@ teloxide = { version = "0.15.0", default-features = false, features = [
   "rustls",
 ] }
 tokio = { version = "=1.45.0", features = ["full"] }
+tower = { version = "=0.5.2", features = ["load-shed"] }
 tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }

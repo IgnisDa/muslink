@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+apalis = { workspace = true }
+apalis-cron = { workspace = true }
+apalis-sql = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
