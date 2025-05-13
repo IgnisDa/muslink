@@ -71,6 +71,10 @@ pub fn has_url_in_message(message: Message) -> bool {
     url_regex.find(message.text().unwrap_or_default()).is_some()
 }
 
+pub fn is_reply_to_message(message: Message) -> bool {
+    message.reply_to_message().is_some()
+}
+
 pub async fn process_music_share(
     text: String,
     msg: &Message,

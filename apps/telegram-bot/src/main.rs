@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use functions::{
-    ProcessMessageResponse, after_process_message, has_url_in_message, process_music_share,
+    ProcessMessageResponse, after_process_message, has_url_in_message, is_reply_to_message,
+    process_music_share,
 };
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
@@ -100,9 +101,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
 
+    let text_reaction_handler = Update::filter_message()
+        .filter(is_reply_to_message)
+        .endpoint(|msg: Message| async move {
+            tracing::info!(
+                "[Reply to message] Received message: {}",
+                msg.text().unwrap_or_default()
+            );
+            respond(())
+        });
+
     tracing::info!("Starting Telegram bot dispatcher");
 
-    let handler = dptree::entry().branch(music_share_handler);
+    let handler = dptree::entry()
+        .branch(music_share_handler)
+        .branch(text_reaction_handler);
 
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(db)])
