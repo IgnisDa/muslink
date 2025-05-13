@@ -6,9 +6,20 @@ use apalis::{
 };
 use apalis_cron::{CronContext, CronStream, Schedule};
 use chrono::Local;
+use migrations::MigratorTrait;
+use schematic::{Config, ConfigLoader, validate::not_empty};
+use sea_orm::Database;
+use serde::Serialize;
 use tokio::join;
 use tower::load_shed::LoadShedLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Serialize, Config)]
+#[config(env)]
+struct AppConfig {
+    #[setting(validate = not_empty, env = "DATABASE_URL")]
+    database_url: String,
+}
 
 #[derive(Debug, Default)]
 struct Reminder;
@@ -22,7 +33,6 @@ async fn schedule_job(_job: Reminder, ctx: CronContext<Local>) -> Result<(), Err
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing::info!("Starting background worker");
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
@@ -33,6 +43,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    let config = ConfigLoader::<AppConfig>::new().load()?.config;
+    tracing::info!("Configuration loaded successfully");
+
+    tracing::info!("Connecting to database...");
+    let db = Database::connect(&config.database_url).await?;
+    tracing::info!("Database connection established");
+
+    tracing::info!("Running database migrations...");
+    migrations::Migrator::up(&db, None).await?;
+    tracing::info!("Database migrations completed");
+
+    tracing::info!("Starting background worker");
 
     let worker = Monitor::new()
         .register(
