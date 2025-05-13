@@ -98,6 +98,6 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
             )));
         }
     };
-    dbg!(&parsed);
+    tracing::info!("Parsed: {parsed:#?}");
     Ok(())
 }
