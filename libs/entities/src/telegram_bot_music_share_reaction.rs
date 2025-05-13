@@ -9,11 +9,37 @@ pub struct Model {
     pub id: Uuid,
     pub reaction_text: String,
     pub created_at: DateTimeUtc,
+    pub telegram_bot_user_id: Uuid,
     pub telegram_message_id: Option<i64>,
     pub telegram_bot_music_share_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::telegram_bot_user::Entity",
+        from = "Column::TelegramBotUserId",
+        to = "super::telegram_bot_user::Column::Id"
+    )]
+    TelegramBotUser,
+    #[sea_orm(
+        belongs_to = "super::telegram_bot_music_share::Entity",
+        from = "Column::TelegramBotMusicShareId",
+        to = "super::telegram_bot_music_share::Column::Id"
+    )]
+    TelegramBotMusicShare,
+}
+
+impl Related<super::telegram_bot_music_share::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TelegramBotMusicShare.def()
+    }
+}
+
+impl Related<super::telegram_bot_user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TelegramBotUser.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
