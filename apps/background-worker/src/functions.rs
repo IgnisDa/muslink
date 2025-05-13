@@ -11,6 +11,7 @@ use openai_api_rs::v1::{
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::Deserialize;
+use uuid::Uuid;
 
 use crate::AppState;
 
@@ -23,7 +24,7 @@ struct LlmResponse<T> {
 
 #[derive(Debug, Deserialize)]
 struct MusicSentiment {
-    id: String,
+    id: Uuid,
     sentiment: SentimentResponseMood,
 }
 
