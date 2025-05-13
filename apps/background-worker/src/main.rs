@@ -40,6 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
+    let args: Vec<String> = std::env::args().collect();
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -58,6 +60,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Running database migrations...");
     migrations::Migrator::up(&db, None).await?;
     tracing::info!("Database migrations completed");
+
+    if args.len() > 1 && args[1] == "trigger" {
+        tracing::info!("Trigger argument detected, running rate_unrated_reactions and exiting");
+        rate_unrated_reactions(&db).await?;
+        return Ok(());
+    }
 
     tracing::info!("Starting background worker");
 
