@@ -8,7 +8,15 @@ apalis = { workspace = true }
 apalis-cron = { workspace = true }
 chrono = { workspace = true }
 dotenvy = { workspace = true }
+entities = { path = "../../libs/entities" }
+migrations = { path = "../../libs/migrations" }
+openai-api-rs = { workspace = true }
+schematic = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sea-orm = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
