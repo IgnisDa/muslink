@@ -8,7 +8,10 @@ use apalis_cron::{CronContext, CronStream, Schedule};
 use chrono::Local;
 use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_reaction};
 use migrations::MigratorTrait;
-use openai_api_rs::v1::api::OpenAIClient;
+use openai_api_rs::v1::{
+    api::OpenAIClient,
+    chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
+};
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use serde::Serialize;
@@ -123,5 +126,15 @@ async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to build OpenAI client");
         return Ok(());
     };
+    let req = ChatCompletionRequest::new(
+        "deepseek/deepseek-chat-v3-0324:free".to_string(),
+        vec![ChatCompletionMessage {
+            name: None,
+            tool_calls: None,
+            tool_call_id: None,
+            role: MessageRole::system,
+            content: Content::Text(RATING_PROMPT.to_string()),
+        }],
+    );
     Ok(())
 }
