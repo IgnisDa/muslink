@@ -17,9 +17,9 @@ Use one of the following sentiment labels:
 
 ### Important Notes:
 
-- Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
 - Response MUST be valid JSON.
-- Do not wrap your response in ```json or ```.
+- Do not wrap your response in any code blocks like ```json or ```.
+- Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
 - Do not include any explanation or commentary.
 
 ### Example Input:

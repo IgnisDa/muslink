@@ -61,7 +61,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         })
         .collect::<Vec<_>>();
     let req = ChatCompletionRequest::new(
-        "gemini-2.5-pro-exp-03-25".to_string(),
+        "gemini-2.0-flash".to_string(),
         vec![
             ChatCompletionMessage {
                 name: None,
