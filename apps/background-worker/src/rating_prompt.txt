@@ -15,13 +15,6 @@ Use one of the following sentiment labels:
 - "negative": the reaction expresses dislike, disapproval, frustration, sarcasm, or criticism.
 - "unrelated": the reaction text does not clearly reflect a sentiment about the music, appears random, or is off-topic.
 
-### Important Notes:
-
-- Response MUST be valid JSON.
-- Do not wrap your response in any code blocks like ```json or ```.
-- Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
-- Do not include any explanation or commentary.
-
 ### Example Input:
 
 [
@@ -41,3 +34,15 @@ Use one of the following sentiment labels:
     { "id": "abc-004", "sentiment": "unrelated" }
   ]
 }
+
+As you can see, the response should be just a string. No code blocks, no markdown, no
+nothing.
+
+### Important Notes:
+
+Please take extreme care to ensure the following:
+
+- Response MUST be valid JSON.
+- Do not wrap your response in any code blocks like ```json or ```.
+- Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
+- Do not include any explanation or commentary.
