@@ -3,16 +3,17 @@ use std::{collections::HashSet, sync::Arc};
 use convert_case::{Case, Casing};
 use entities::{
     prelude::{TelegramBotChannel, TelegramBotMusicShare, TelegramBotUser},
-    telegram_bot_channel, telegram_bot_music_share, telegram_bot_user,
+    telegram_bot_channel, telegram_bot_music_share, telegram_bot_music_share_reaction,
+    telegram_bot_user,
 };
 use regex::Regex;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,
-    prelude::Uuid,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbErr, EntityTrait,
+    QueryFilter, prelude::Uuid,
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
-    types::Message,
+    types::{Message, MessageReactionUpdated},
     utils::html::{link, user_mention},
 };
 
@@ -30,7 +31,7 @@ async fn find_or_create_telegram_user(
             break 'chan channel;
         }
         let new_channel = telegram_bot_channel::ActiveModel {
-            telegram_channel_id: Set(telegram_channel_id),
+            telegram_channel_id: ActiveValue::Set(telegram_channel_id),
             ..Default::default()
         };
         new_channel.insert(db).await?
@@ -45,8 +46,8 @@ async fn find_or_create_telegram_user(
         return Ok(user);
     }
     let new_user = telegram_bot_user::ActiveModel {
-        telegram_user_id: Set(user_id),
-        telegram_bot_channel_id: Set(channel.id),
+        telegram_user_id: ActiveValue::Set(user_id),
+        telegram_bot_channel_id: ActiveValue::Set(channel.id),
         ..Default::default()
     };
     let result = new_user.insert(db).await?;
@@ -182,14 +183,41 @@ pub async fn after_process_message(
     )
     .await?;
     for music_link_id in music_link_ids {
-        let to_insert: telegram_bot_music_share::ActiveModel =
-            telegram_bot_music_share::ActiveModel {
-                music_link_id: Set(music_link_id),
-                telegram_bot_user_id: Set(user.id),
-                sent_telegram_message_id: Set(sent_message.id.0.try_into().unwrap()),
-                received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
-                ..Default::default()
-            };
+        let to_insert = telegram_bot_music_share::ActiveModel {
+            music_link_id: ActiveValue::Set(music_link_id),
+            telegram_bot_user_id: ActiveValue::Set(user.id),
+            sent_telegram_message_id: ActiveValue::Set(sent_message.id.0.try_into().unwrap()),
+            received_telegram_message_id: ActiveValue::Set(
+                received_message.id.0.try_into().unwrap(),
+            ),
+            ..Default::default()
+        };
+        to_insert.insert(db).await?;
+    }
+    Ok(())
+}
+
+async fn process_reaction(
+    text: String,
+    db: &DatabaseConnection,
+    reply_to_message_id: i32,
+    reaction_text_message_id: Option<i64>,
+) -> Result<(), DbErr> {
+    if text.is_empty() {
+        tracing::warn!("No text found in reaction");
+        return Ok(());
+    }
+    let linked_shares = TelegramBotMusicShare::find()
+        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message_id))
+        .all(db)
+        .await?;
+    for share in linked_shares {
+        let to_insert = telegram_bot_music_share_reaction::ActiveModel {
+            reaction_text: ActiveValue::Set(text.clone()),
+            telegram_bot_music_share_id: ActiveValue::Set(share.id),
+            telegram_message_id: ActiveValue::Set(reaction_text_message_id),
+            ..Default::default()
+        };
         to_insert.insert(db).await?;
     }
     Ok(())
@@ -203,9 +231,26 @@ pub async fn process_text_reaction(
         tracing::warn!("No reply to message found");
         return Ok(());
     };
-    let shares_linked = TelegramBotMusicShare::find()
-        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message.id.0))
-        .all(db)
-        .await?;
+    process_reaction(
+        message.text().unwrap_or_default().to_string(),
+        db,
+        reply_to_message.id.0,
+        Some(message.id.0.try_into().unwrap()),
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn process_emoji_reaction(
+    db: &DatabaseConnection,
+    reaction: &MessageReactionUpdated,
+) -> Result<(), DbErr> {
+    let new_reaction = reaction
+        .new_reaction
+        .iter()
+        .filter_map(|t| t.emoji().cloned())
+        .collect::<Vec<String>>()
+        .join(",");
+    process_reaction(new_reaction, db, reaction.message_id.0, None).await?;
     Ok(())
 }

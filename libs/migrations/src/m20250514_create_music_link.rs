@@ -32,24 +32,24 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(
+                        ColumnDef::new(MusicLink::AllLinks)
+                            .not_null()
+                            .array(ColumnType::Text),
+                    )
+                    .col(
                         ColumnDef::new(MusicLink::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
+                    .col(ColumnDef::new(MusicLink::SpotifyLink).text())
+                    .col(ColumnDef::new(MusicLink::AppleMusicLink).text())
                     .col(
                         ColumnDef::new(MusicLink::EquivalentLinks)
                             .array(ColumnType::Text)
                             .not_null(),
                     )
-                    .col(ColumnDef::new(MusicLink::SpotifyLink).text())
-                    .col(ColumnDef::new(MusicLink::AppleMusicLink).text())
                     .col(ColumnDef::new(MusicLink::YoutubeMusicLink).text())
-                    .col(
-                        ColumnDef::new(MusicLink::AllLinks)
-                            .not_null()
-                            .array(ColumnType::Text),
-                    )
                     .to_owned(),
             )
             .await?;

@@ -18,7 +18,7 @@ pub enum Relation {
         belongs_to = "super::telegram_bot_channel::Entity",
         from = "Column::TelegramBotChannelId",
         to = "super::telegram_bot_channel::Column::Id",
-        on_update = "NoAction",
+        on_update = "Cascade",
         on_delete = "Cascade"
     )]
     TelegramBotChannel,

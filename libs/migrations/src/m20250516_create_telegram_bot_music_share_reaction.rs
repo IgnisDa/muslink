@@ -1,17 +1,18 @@
 use sea_orm_migration::prelude::*;
 
-use super::m20250512_create_telegram_bot_channel::TelegramBotChannel;
+use crate::m20250515_create_telegram_bot_music_share::TelegramBotMusicShare;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 #[derive(Iden)]
-pub enum TelegramBotUser {
+pub enum TelegramBotMusicShareReaction {
     Id,
     Table,
     CreatedAt,
-    TelegramUserId,
-    TelegramBotChannelId,
+    ReactionText,
+    TelegramMessageId,
+    TelegramBotMusicShareId,
 }
 
 #[async_trait::async_trait]
@@ -20,58 +21,58 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(TelegramBotUser::Table)
+                    .table(TelegramBotMusicShareReaction::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(TelegramBotUser::Id)
+                        ColumnDef::new(TelegramBotMusicShareReaction::Id)
                             .uuid()
                             .not_null()
                             .primary_key()
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotUser::CreatedAt)
+                        ColumnDef::new(TelegramBotMusicShareReaction::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotUser::TelegramUserId)
-                            .big_integer()
+                        ColumnDef::new(TelegramBotMusicShareReaction::ReactionText)
+                            .text()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotUser::TelegramBotChannelId)
+                        ColumnDef::new(TelegramBotMusicShareReaction::TelegramMessageId)
+                            .big_integer(),
+                    )
+                    .col(
+                        ColumnDef::new(TelegramBotMusicShareReaction::TelegramBotMusicShareId)
                             .uuid()
                             .not_null(),
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .name("fk-telegram_bot_user-channel_id")
+                            .name("fk-telegram_bot_music_share-music_link_id")
                             .from(
-                                TelegramBotUser::Table,
-                                TelegramBotUser::TelegramBotChannelId,
+                                TelegramBotMusicShareReaction::Table,
+                                TelegramBotMusicShareReaction::TelegramBotMusicShareId,
                             )
-                            .to(TelegramBotChannel::Table, TelegramBotChannel::Id)
+                            .to(TelegramBotMusicShare::Table, TelegramBotMusicShare::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )
             .await?;
-
         manager
             .create_index(
                 Index::create()
-                    .table(TelegramBotUser::Table)
-                    .name("idx-telegram_bot_user-channel_user_unique")
-                    .col(TelegramBotUser::TelegramBotChannelId)
-                    .col(TelegramBotUser::TelegramUserId)
-                    .unique()
+                    .name("idx-telegram_bot_music_share_reaction-reaction_text")
+                    .table(TelegramBotMusicShareReaction::Table)
+                    .col(TelegramBotMusicShareReaction::ReactionText)
                     .to_owned(),
             )
             .await?;
-
         Ok(())
     }
 }

@@ -27,16 +27,16 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotChannel::TelegramChannelId)
-                            .big_integer()
-                            .not_null()
-                            .unique_key(),
-                    )
-                    .col(
                         ColumnDef::new(TelegramBotChannel::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        ColumnDef::new(TelegramBotChannel::TelegramChannelId)
+                            .big_integer()
+                            .not_null()
+                            .unique_key(),
                     )
                     .to_owned(),
             )
