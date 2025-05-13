@@ -82,9 +82,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let result = match client.chat_completion(req).await {
         Ok(result) => result,
         Err(e) => {
-            return Err(Error::Failed(Arc::new(
-                format!("Failed to send request to OpenAI: {}", e).into(),
-            )));
+            return Err(Error::Failed(Arc::new(format!("Error: {e}").into())));
         }
     };
     let Some(response_text) = result.choices[0].message.content.as_ref() else {
@@ -96,7 +94,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         Ok(val) => val,
         Err(e) => {
             return Err(Error::Failed(Arc::new(
-                format!("Error: {}, Text: {}", e, response_text).into(),
+                format!("Error: {e}, Text: {response_text}").into(),
             )));
         }
     };
