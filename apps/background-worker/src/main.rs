@@ -6,20 +6,16 @@ use apalis::{
 };
 use apalis_cron::{CronContext, CronStream, Schedule};
 use chrono::Local;
-use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_reaction};
+use functions::rate_unrated_reactions;
 use migrations::MigratorTrait;
-use openai_api_rs::v1::{
-    api::OpenAIClient,
-    chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
-};
 use schematic::{Config, ConfigLoader, validate::not_empty};
-use sea_orm::{ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{Database, DatabaseConnection};
 use serde::Serialize;
 use tokio::join;
 use tower::load_shed::LoadShedLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
+mod functions;
 
 #[derive(Serialize, Clone, Config)]
 #[config(env)]
@@ -104,60 +100,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = join!(worker);
     tracing::info!("Background worker finished");
 
-    Ok(())
-}
-
-async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
-    let Ok(unrated) = TelegramBotMusicShareReaction::find()
-        .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
-        .limit(5)
-        .all(&state.db)
-        .await
-    else {
-        tracing::error!("Failed to fetch unrated reactions");
-        return Ok(());
-    };
-    tracing::info!("Found {} unrated reactions", unrated.len());
-    let Ok(mut client) = OpenAIClient::builder()
-        .with_endpoint("https://openrouter.ai/api/v1")
-        .with_api_key(state.config.open_router_api_key.clone())
-        .build()
-    else {
-        tracing::error!("Failed to build OpenAI client");
-        return Ok(());
-    };
-    let input = unrated
-        .into_iter()
-        .map(|r| {
-            serde_json::json!({
-                "id": r.id,
-                "reaction_text": r.reaction_text,
-            })
-        })
-        .collect::<Vec<_>>();
-    let req = ChatCompletionRequest::new(
-        "deepseek/deepseek-chat-v3-0324:free".to_string(),
-        vec![
-            ChatCompletionMessage {
-                name: None,
-                tool_calls: None,
-                tool_call_id: None,
-                role: MessageRole::system,
-                content: Content::Text(RATING_PROMPT.to_string()),
-            },
-            ChatCompletionMessage {
-                name: None,
-                tool_calls: None,
-                tool_call_id: None,
-                role: MessageRole::user,
-                content: Content::Text(serde_json::to_string(&input).unwrap()),
-            },
-        ],
-    );
-    let Ok(result) = client.chat_completion(req).await else {
-        tracing::error!("Failed to send request to OpenAI");
-        return Ok(());
-    };
-    dbg!(&result);
     Ok(())
 }

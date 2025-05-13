@@ -1,0 +1,66 @@
+use apalis::prelude::Error;
+use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_reaction};
+use openai_api_rs::v1::{
+    api::OpenAIClient,
+    chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
+};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+
+use crate::AppState;
+
+static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
+
+pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
+    let Ok(unrated) = TelegramBotMusicShareReaction::find()
+        .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
+        .limit(5)
+        .all(&state.db)
+        .await
+    else {
+        tracing::error!("Failed to fetch unrated reactions");
+        return Ok(());
+    };
+    tracing::info!("Found {} unrated reactions", unrated.len());
+    let Ok(mut client) = OpenAIClient::builder()
+        .with_endpoint("https://openrouter.ai/api/v1")
+        .with_api_key(state.config.open_router_api_key.clone())
+        .build()
+    else {
+        tracing::error!("Failed to build OpenAI client");
+        return Ok(());
+    };
+    let input = unrated
+        .into_iter()
+        .map(|r| {
+            serde_json::json!({
+                "id": r.id,
+                "reaction_text": r.reaction_text,
+            })
+        })
+        .collect::<Vec<_>>();
+    let req = ChatCompletionRequest::new(
+        "deepseek/deepseek-chat-v3-0324:free".to_string(),
+        vec![
+            ChatCompletionMessage {
+                name: None,
+                tool_calls: None,
+                tool_call_id: None,
+                role: MessageRole::system,
+                content: Content::Text(RATING_PROMPT.to_string()),
+            },
+            ChatCompletionMessage {
+                name: None,
+                tool_calls: None,
+                tool_call_id: None,
+                role: MessageRole::user,
+                content: Content::Text(serde_json::to_string(&input).unwrap()),
+            },
+        ],
+    );
+    let Ok(result) = client.chat_completion(req).await else {
+        tracing::error!("Failed to send request to OpenAI");
+        return Ok(());
+    };
+    dbg!(&result);
+    Ok(())
+}
