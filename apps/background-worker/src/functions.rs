@@ -1,5 +1,8 @@
 use apalis::prelude::Error;
-use entities::{prelude::TelegramBotMusicShareReaction, telegram_bot_music_share_reaction};
+use entities::{
+    prelude::TelegramBotMusicShareReaction,
+    telegram_bot_music_share_reaction::{self, SentimentResponseMood},
+};
 use openai_api_rs::v1::{
     api::OpenAIClient,
     chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
@@ -10,15 +13,6 @@ use serde::Deserialize;
 use crate::AppState;
 
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum SentimentResponseMood {
-    Neutral,
-    Positive,
-    Negative,
-    Unrelated,
-}
 
 #[derive(Debug, Deserialize)]
 struct SentimentResponse {
