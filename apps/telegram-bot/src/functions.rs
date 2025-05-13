@@ -186,6 +186,7 @@ pub async fn after_process_message(
             telegram_bot_music_share::ActiveModel {
                 music_link_id: Set(music_link_id),
                 telegram_bot_user_id: Set(user.id),
+                sent_telegram_message_id: Set(sent_message.id.0.try_into().unwrap()),
                 received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
                 ..Default::default()
             };
