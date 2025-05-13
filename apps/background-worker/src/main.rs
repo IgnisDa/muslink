@@ -126,15 +126,38 @@ async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to build OpenAI client");
         return Ok(());
     };
+    let input = unrated
+        .into_iter()
+        .map(|r| {
+            serde_json::json!({
+                "id": r.id,
+                "reaction_text": r.reaction_text,
+            })
+        })
+        .collect::<Vec<_>>();
     let req = ChatCompletionRequest::new(
         "deepseek/deepseek-chat-v3-0324:free".to_string(),
-        vec![ChatCompletionMessage {
-            name: None,
-            tool_calls: None,
-            tool_call_id: None,
-            role: MessageRole::system,
-            content: Content::Text(RATING_PROMPT.to_string()),
-        }],
+        vec![
+            ChatCompletionMessage {
+                name: None,
+                tool_calls: None,
+                tool_call_id: None,
+                role: MessageRole::system,
+                content: Content::Text(RATING_PROMPT.to_string()),
+            },
+            ChatCompletionMessage {
+                name: None,
+                tool_calls: None,
+                tool_call_id: None,
+                role: MessageRole::user,
+                content: Content::Text(serde_json::to_string(&input).unwrap()),
+            },
+        ],
     );
+    let Ok(result) = client.chat_completion(req).await else {
+        tracing::error!("Failed to send request to OpenAI");
+        return Ok(());
+    };
+    dbg!(&result);
     Ok(())
 }
