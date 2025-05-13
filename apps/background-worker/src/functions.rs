@@ -89,7 +89,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let parsed = match serde_json::from_str::<MusicSentimentResponse>(response_text) {
         Ok(val) => val,
         Err(e) => {
-            tracing::error!("Failed to parse response from OpenAI: {}", e);
+            tracing::error!("Response error: {}. Text: {}", e, response_text);
             return Ok(());
         }
     };
