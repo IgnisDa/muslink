@@ -15,7 +15,7 @@ use tokio::join;
 use tower::load_shed::LoadShedLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[derive(Serialize, Config)]
+#[derive(Serialize, Clone, Config)]
 #[config(env)]
 struct AppConfig {
     #[setting(validate = not_empty, env = "DATABASE_URL")]
@@ -24,16 +24,22 @@ struct AppConfig {
     open_router_api_key: String,
 }
 
+#[derive(Clone)]
+struct AppState {
+    config: AppConfig,
+    db: DatabaseConnection,
+}
+
 #[derive(Debug, Default)]
 struct Reminder;
 
 async fn background_worker_job(
     _job: Reminder,
+    state: Data<AppState>,
     ctx: CronContext<Local>,
-    db: Data<DatabaseConnection>,
 ) -> Result<(), Error> {
     tracing::info!("Performing job at: {}", ctx.get_timestamp());
-    rate_unrated_reactions(&*db).await?;
+    rate_unrated_reactions(&state).await?;
     Ok(())
 }
 
@@ -63,9 +69,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     migrations::Migrator::up(&db, None).await?;
     tracing::info!("Database migrations completed");
 
+    let state = AppState { config, db };
+
     if args.len() > 1 && args[1] == "trigger" {
         tracing::info!("Trigger argument detected, running rate_unrated_reactions and exiting");
-        rate_unrated_reactions(&db).await?;
+        rate_unrated_reactions(&state).await?;
         return Ok(());
     }
 
@@ -77,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .enable_tracing()
                 .layer(LoadShedLayer::new())
                 .catch_panic()
-                .data(db)
+                .data(state)
                 .backend(CronStream::new_with_timezone(
                     Schedule::from_str("0 * * * * *").unwrap(),
                     Local,
@@ -93,10 +101,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn rate_unrated_reactions(db: &DatabaseConnection) -> Result<(), Error> {
+async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let unrated = TelegramBotMusicShareReaction::find()
         .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
-        .all(db)
+        .all(&state.db)
         .await
         .ok();
     dbg!(&unrated);
