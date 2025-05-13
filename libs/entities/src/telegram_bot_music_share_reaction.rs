@@ -12,6 +12,7 @@ pub struct Model {
     pub telegram_bot_user_id: Uuid,
     pub telegram_message_id: Option<i64>,
     pub telegram_bot_music_share_id: Uuid,
+    pub llm_sentiment_analysis: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
