@@ -71,7 +71,10 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to get response from OpenAI");
         return Ok(());
     };
-    let parsed: Vec<SentimentResponse> = serde_json::from_str(response_text).unwrap();
+    let Ok(parsed) = serde_json::from_str::<Vec<SentimentResponse>>(response_text) else {
+        tracing::error!("Failed to parse response from OpenAI");
+        return Ok(());
+    };
     dbg!(&parsed);
     Ok(())
 }
