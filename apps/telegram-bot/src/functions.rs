@@ -195,6 +195,23 @@ pub async fn after_process_message(
     Ok(())
 }
 
+async fn process_reaction(
+    text: String,
+    db: &DatabaseConnection,
+    reply_to_message_id: i32,
+) -> Result<(), DbErr> {
+    if text.is_empty() {
+        tracing::warn!("No text found in reaction");
+        return Ok(());
+    }
+    let linked_shares = TelegramBotMusicShare::find()
+        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message_id))
+        .all(db)
+        .await?;
+    dbg!(&linked_shares);
+    Ok(())
+}
+
 pub async fn process_text_reaction(
     message: &Message,
     db: &DatabaseConnection,
@@ -203,11 +220,12 @@ pub async fn process_text_reaction(
         tracing::warn!("No reply to message found");
         return Ok(());
     };
-    let linked_shares = TelegramBotMusicShare::find()
-        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message.id.0))
-        .all(db)
-        .await?;
-    dbg!(&linked_shares);
+    process_reaction(
+        message.text().unwrap_or_default().to_string(),
+        db,
+        reply_to_message.id.0,
+    )
+    .await?;
     Ok(())
 }
 
@@ -215,10 +233,12 @@ pub async fn process_emoji_reaction(
     db: &DatabaseConnection,
     reaction: &MessageReactionUpdated,
 ) -> Result<(), DbErr> {
-    let linked_shares = TelegramBotMusicShare::find()
-        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reaction.message_id.0))
-        .all(db)
-        .await?;
-    dbg!(&linked_shares);
+    let new_reaction = reaction
+        .new_reaction
+        .iter()
+        .filter_map(|t| t.emoji().cloned())
+        .collect::<Vec<String>>()
+        .join(",");
+    process_reaction(new_reaction, db, reaction.message_id.0).await?;
     Ok(())
 }
