@@ -12,7 +12,6 @@ use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use serde::Serialize;
 use tokio::join;
-use tower::load_shed::LoadShedLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod functions;
@@ -41,8 +40,7 @@ async fn background_worker_job(
     ctx: CronContext<Local>,
 ) -> Result<(), Error> {
     tracing::info!("Performing job at: {}", ctx.get_timestamp());
-    rate_unrated_reactions(&state).await?;
-    Ok(())
+    rate_unrated_reactions(&state).await
 }
 
 #[tokio::main]
@@ -85,7 +83,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .register(
             WorkerBuilder::new("background-worker-job")
                 .enable_tracing()
-                .layer(LoadShedLayer::new())
                 .retry(RetryPolicy::retries(5))
                 .catch_panic()
                 .data(state)
