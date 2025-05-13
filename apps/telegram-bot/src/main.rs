@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bot = Bot::new(config.teloxide_token.clone());
 
-    let handler = Update::filter_message()
+    let music_share_handler = Update::filter_message()
         .filter(has_url_in_message)
         .endpoint(
             |bot: Bot, msg: Message, db: Arc<DatabaseConnection>| async move {
@@ -101,6 +101,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     tracing::info!("Starting Telegram bot dispatcher");
+
+    let handler = dptree::entry().branch(music_share_handler);
 
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(db)])
