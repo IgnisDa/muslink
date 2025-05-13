@@ -5,15 +5,24 @@ use openai_api_rs::v1::{
     chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
 };
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use serde::Deserialize;
 
 use crate::AppState;
 
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
+enum SentimentResponseMood {
+    Neutral,
+    Positive,
+    Negative,
+    Unrelated,
+}
+
+#[derive(Debug, Deserialize)]
 struct SentimentResponse {
     id: String,
-    sentiment: String,
+    sentiment: SentimentResponseMood,
 }
 
 pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
