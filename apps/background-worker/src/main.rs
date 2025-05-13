@@ -16,6 +16,8 @@ use tokio::join;
 use tower::load_shed::LoadShedLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
+
 #[derive(Serialize, Clone, Config)]
 #[config(env)]
 struct AppConfig {
