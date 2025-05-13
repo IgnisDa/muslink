@@ -9,8 +9,8 @@ pub struct Model {
     pub id: Uuid,
     pub music_link_id: Uuid,
     pub created_at: DateTimeUtc,
-    pub telegram_message_id: i64,
     pub telegram_bot_user_id: Uuid,
+    pub received_telegram_message_id: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

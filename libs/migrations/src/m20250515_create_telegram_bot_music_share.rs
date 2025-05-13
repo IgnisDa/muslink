@@ -13,8 +13,8 @@ pub enum TelegramBotMusicShare {
     Table,
     CreatedAt,
     MusicLinkId,
-    TelegramMessageId,
     TelegramBotUserId,
+    ReceivedTelegramMessageId,
 }
 
 #[async_trait::async_trait]
@@ -44,7 +44,7 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotMusicShare::TelegramMessageId)
+                        ColumnDef::new(TelegramBotMusicShare::ReceivedTelegramMessageId)
                             .big_integer()
                             .not_null(),
                     )
