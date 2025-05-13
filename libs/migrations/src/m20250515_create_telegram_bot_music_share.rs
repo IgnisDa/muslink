@@ -78,15 +78,6 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
-        manager
-            .create_index(
-                Index::create()
-                    .name("idx-telegram_bot_music_share-telegram_message_id")
-                    .table(TelegramBotMusicShare::Table)
-                    .col(TelegramBotMusicShare::TelegramMessageId)
-                    .to_owned(),
-            )
-            .await?;
         Ok(())
     }
 }
