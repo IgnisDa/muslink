@@ -1,6 +1,10 @@
 You will receive a list of user reactions in JSON format. Each object has an `id` and a `reaction_text`.
 
-These reactions were collected from a Telegram chat where users respond to music links shared by others. The reactions may be short, informal, and include emojis. Your task is to analyze the sentiment conveyed in each reaction and return a new JSON list, where each object contains:
+These reactions were collected from a Telegram chat where users respond to music links
+shared by others. The reactions may be short, informal, and include emojis. Your task is to
+analyze the sentiment conveyed in each reaction and return a new JSON compatible response,
+where each object contains:
+
 - the original `id`
 - a `sentiment` label for the `reaction_text`
 
@@ -11,7 +15,8 @@ Use one of the following sentiment labels:
 - "negative": the reaction expresses dislike, disapproval, frustration, sarcasm, or criticism.
 - "unrelated": the reaction text does not clearly reflect a sentiment about the music, appears random, or is off-topic.
 
-Respond ONLY with the JSON array and nothing else. Do not include any explanation or commentary.
+Respond ONLY with the JSON object as demonstrated in the example output and nothing else.
+Do not include any explanation or commentary.
 
 ### Example Input:
 
@@ -24,9 +29,11 @@ Respond ONLY with the JSON array and nothing else. Do not include any explanatio
 
 ### Example Output:
 
-[
-  { "id": "abc-001", "sentiment": "positive" },
-  { "id": "abc-002", "sentiment": "neutral" },
-  { "id": "abc-003", "sentiment": "negative" },
-  { "id": "abc-004", "sentiment": "unrelated" }
-]
+{
+  "response": [
+    { "id": "abc-001", "sentiment": "positive" },
+    { "id": "abc-002", "sentiment": "neutral" },
+    { "id": "abc-003", "sentiment": "negative" },
+    { "id": "abc-004", "sentiment": "unrelated" }
+  ]
+}
