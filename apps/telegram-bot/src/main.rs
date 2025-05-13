@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use functions::{
     ProcessMessageResponse, after_process_message, has_url_in_message, is_reply_to_message,
-    process_music_share,
+    process_music_share, process_text_reaction,
 };
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
@@ -103,11 +103,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let text_reaction_handler = Update::filter_message()
         .filter(is_reply_to_message)
-        .endpoint(|msg: Message| async move {
-            tracing::info!(
-                "[Reply to message] Received message: {}",
-                msg.text().unwrap_or_default()
-            );
+        .endpoint(|msg: Message, db: Arc<DatabaseConnection>| async move {
+            process_text_reaction(&msg, &db).await.ok();
             respond(())
         });
 

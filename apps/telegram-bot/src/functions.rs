@@ -188,3 +188,15 @@ pub async fn after_process_message(
     }
     Ok(())
 }
+
+pub async fn process_text_reaction(
+    message: &Message,
+    db: &DatabaseConnection,
+) -> Result<(), DbErr> {
+    let Some(reply_to_message) = message.reply_to_message() else {
+        tracing::warn!("No reply to message found");
+        return Ok(());
+    };
+    dbg!(&reply_to_message);
+    Ok(())
+}
