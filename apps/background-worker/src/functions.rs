@@ -43,8 +43,8 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     };
     tracing::info!("Found {} unrated reactions", unrated.len());
     let Ok(mut client) = OpenAIClient::builder()
-        .with_endpoint("https://openrouter.ai/api/v1")
-        .with_api_key(state.config.open_router_api_key.clone())
+        .with_endpoint("https://generativelanguage.googleapis.com/v1beta/openai")
+        .with_api_key(state.config.llm_api_token.clone())
         .build()
     else {
         return Err(Error::Failed(Arc::new(
@@ -61,7 +61,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         })
         .collect::<Vec<_>>();
     let req = ChatCompletionRequest::new(
-        "deepseek/deepseek-chat-v3-0324:free".to_string(),
+        "gemini-2.5-pro-exp-03-25".to_string(),
         vec![
             ChatCompletionMessage {
                 name: None,
