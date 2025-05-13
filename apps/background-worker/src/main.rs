@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let worker = Monitor::new()
         .register(
-            WorkerBuilder::new("schedule-job")
+            WorkerBuilder::new("background-worker-job")
                 .enable_tracing()
                 .layer(LoadShedLayer::new())
                 .catch_panic()
