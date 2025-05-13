@@ -87,12 +87,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             music_link_ids,
                         } => {
                             tracing::info!("Sending music link response to chat {}", chat_id);
-                            bot.send_message(msg.chat.id, text)
+                            let sent = bot
+                                .send_message(msg.chat.id, text)
                                 .parse_mode(ParseMode::Html)
                                 .await?;
                             tracing::debug!("Deleting original message");
                             bot.delete_message(msg.chat.id, msg.id).await?;
-                            after_process_message(&msg, &db, music_link_ids).await.ok();
+                            after_process_message(&db, &sent, music_link_ids, &msg)
+                                .await
+                                .ok();
                         }
                     },
                 };

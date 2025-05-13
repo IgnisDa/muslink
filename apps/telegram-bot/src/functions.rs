@@ -165,23 +165,28 @@ pub async fn process_music_share(
 }
 
 pub async fn after_process_message(
-    message: &Message,
     db: &DatabaseConnection,
+    sent_message: &Message,
     music_link_ids: Vec<Uuid>,
+    received_message: &Message,
 ) -> Result<(), DbErr> {
-    let Some(user) = &message.from else {
+    let Some(user) = &received_message.from else {
         tracing::warn!("No user found in message");
         return Ok(());
     };
     tracing::debug!("Processing music link ids: {:?}", music_link_ids);
-    let user =
-        find_or_create_telegram_user(user.id.0.try_into().unwrap(), db, message.chat.id.0).await?;
+    let user = find_or_create_telegram_user(
+        user.id.0.try_into().unwrap(),
+        db,
+        received_message.chat.id.0,
+    )
+    .await?;
     for music_link_id in music_link_ids {
         let to_insert: telegram_bot_music_share::ActiveModel =
             telegram_bot_music_share::ActiveModel {
                 music_link_id: Set(music_link_id),
                 telegram_bot_user_id: Set(user.id),
-                received_telegram_message_id: Set(message.id.0.try_into().unwrap()),
+                received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
                 ..Default::default()
             };
         to_insert.insert(db).await?;
