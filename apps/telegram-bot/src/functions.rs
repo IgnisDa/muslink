@@ -12,7 +12,7 @@ use sea_orm::{
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
-    types::Message,
+    types::{Message, MessageReactionUpdated},
     utils::html::{link, user_mention},
 };
 
@@ -203,9 +203,22 @@ pub async fn process_text_reaction(
         tracing::warn!("No reply to message found");
         return Ok(());
     };
-    let shares_linked = TelegramBotMusicShare::find()
+    let linked_shares = TelegramBotMusicShare::find()
         .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message.id.0))
         .all(db)
         .await?;
+    dbg!(&linked_shares);
+    Ok(())
+}
+
+pub async fn process_emoji_reaction(
+    db: &DatabaseConnection,
+    reaction: &MessageReactionUpdated,
+) -> Result<(), DbErr> {
+    let linked_shares = TelegramBotMusicShare::find()
+        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reaction.message_id.0))
+        .all(db)
+        .await?;
+    dbg!(&linked_shares);
     Ok(())
 }

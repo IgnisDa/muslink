@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use functions::{
     ProcessMessageResponse, after_process_message, has_url_in_message, is_reply_to_message,
-    process_music_share, process_text_reaction,
+    process_emoji_reaction, process_music_share, process_text_reaction,
 };
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
@@ -14,7 +14,7 @@ use teloxide::{
     payloads::{SendMessageSetters, SetMessageReactionSetters},
     prelude::{Dispatcher, Requester},
     respond,
-    types::{Message, ParseMode, ReactionType, Update},
+    types::{Message, MessageReactionUpdated, ParseMode, ReactionType, Update},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -111,11 +111,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             respond(())
         });
 
+    let emoji_reaction_handler = Update::filter_message_reaction_updated().endpoint(
+        |reaction: MessageReactionUpdated, db: Arc<DatabaseConnection>| async move {
+            process_emoji_reaction(&db, &reaction).await.ok();
+            respond(())
+        },
+    );
+
     tracing::info!("Starting Telegram bot dispatcher");
 
     let handler = dptree::entry()
         .branch(music_share_handler)
-        .branch(text_reaction_handler);
+        .branch(text_reaction_handler)
+        .branch(emoji_reaction_handler);
 
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(db)])
