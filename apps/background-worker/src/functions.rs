@@ -100,7 +100,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
             )));
         }
     };
-    tracing::info!("Parsed: {parsed:#?}");
+    tracing::info!("Parsed: {parsed:?}");
     for sentiment in parsed.response {
         let Ok(updated) = TelegramBotMusicShareReaction::update_many()
             .filter(telegram_bot_music_share_reaction::Column::Id.eq(sentiment.id))
