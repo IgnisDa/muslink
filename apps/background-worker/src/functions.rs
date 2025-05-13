@@ -7,7 +7,7 @@ use openai_api_rs::v1::{
     api::OpenAIClient,
     chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
 };
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -23,6 +23,7 @@ struct SentimentResponse {
 pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let Ok(unrated) = TelegramBotMusicShareReaction::find()
         .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
+        .order_by_asc(telegram_bot_music_share_reaction::Column::CreatedAt)
         .limit(5)
         .all(&state.db)
         .await
