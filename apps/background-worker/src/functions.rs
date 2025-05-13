@@ -4,7 +4,6 @@ use openai_api_rs::v1::{
     api::OpenAIClient,
     chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
 };
-use schematic::{Config, ConfigEnum};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serde::Deserialize;
 
@@ -12,7 +11,7 @@ use crate::AppState;
 
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
-#[derive(Debug, Deserialize, Clone, ConfigEnum)]
+#[derive(Debug, Deserialize)]
 enum SentimentResponseMood {
     Neutral,
     Positive,
@@ -20,7 +19,7 @@ enum SentimentResponseMood {
     Unrelated,
 }
 
-#[derive(Debug, Deserialize, Clone, Config)]
+#[derive(Debug, Deserialize)]
 struct SentimentResponse {
     id: String,
     sentiment: SentimentResponseMood,
