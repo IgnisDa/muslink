@@ -15,10 +15,17 @@ use crate::AppState;
 static RATING_PROMPT: &str = include_str!("rating_prompt.txt");
 
 #[derive(Debug, Deserialize)]
-struct SentimentResponse {
+struct LlmResponse<T> {
+    response: T,
+}
+
+#[derive(Debug, Deserialize)]
+struct MusicSentiment {
     id: String,
     sentiment: SentimentResponseMood,
 }
+
+type MusicSentimentResponse = LlmResponse<Vec<MusicSentiment>>;
 
 pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let Ok(unrated) = TelegramBotMusicShareReaction::find()
@@ -79,7 +86,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to get response from OpenAI");
         return Ok(());
     };
-    let parsed = match serde_json::from_str::<Vec<SentimentResponse>>(response_text) {
+    let parsed = match serde_json::from_str::<MusicSentimentResponse>(response_text) {
         Ok(val) => val,
         Err(e) => {
             tracing::error!("Failed to parse response from OpenAI: {}", e);
