@@ -33,6 +33,7 @@ rust_iso3166 = "=0.1.14"
 schematic = { version = "=0.18.4", features = [
   "config",
   "env",
+  "schema",
   "validate",
 ], default-features = false }
 sea-orm = { version = "1.1.11", features = [

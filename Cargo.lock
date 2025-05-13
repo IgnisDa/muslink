@@ -3012,6 +3012,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5ef6e8280c23aaea2fd335c7c6add3be31618f80e8a9883d2e77927a9aa3f40"
 dependencies = [
  "garde",
+ "indexmap 2.9.0",
  "miette",
  "schematic_macros",
  "schematic_types",
