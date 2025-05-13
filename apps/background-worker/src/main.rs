@@ -113,6 +113,7 @@ async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         tracing::error!("Failed to fetch unrated reactions");
         return Ok(());
     };
+    tracing::info!("Found {} unrated reactions", unrated.len());
     let Ok(mut client) = OpenAIClient::builder()
         .with_endpoint("https://openrouter.ai/api/v1")
         .with_api_key(state.config.open_router_api_key.clone())
