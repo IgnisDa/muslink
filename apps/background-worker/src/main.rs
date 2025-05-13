@@ -14,12 +14,15 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct Reminder;
 
 async fn schedule_job(_job: Reminder, ctx: CronContext<Local>) -> Result<(), Error> {
-    println!("Performing job {}", ctx.get_timestamp());
+    tracing::debug!("Starting schedule_job");
+    tracing::info!("Performing job {}", ctx.get_timestamp());
+    tracing::debug!("Finished schedule_job");
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing::info!("Starting background worker");
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
@@ -45,7 +48,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .run();
 
+    tracing::info!("Worker registered and running");
     let _ = join!(worker);
+    tracing::info!("Background worker finished");
 
     Ok(())
 }
