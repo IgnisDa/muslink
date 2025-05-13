@@ -49,9 +49,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: backend
-            dockerfile: apps/backend/Dockerfile
-            image: ${{ github.repository }}
+          - name: graphql-api
+            dockerfile: apps/graphql-api/Dockerfile
+            image: ${{ github.repository }}-graphql-api
           - name: telegram-bot
             dockerfile: apps/telegram-bot/Dockerfile
             image: ${{ github.repository }}-telegram-bot

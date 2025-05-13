@@ -8,6 +8,6 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 
 WORKDIR /usr/local/bin
-COPY --from=builder /usr/src/app/target/release/backend .
+COPY --from=builder /usr/src/app/target/release/graphql-api .
 
-CMD ["./backend"]
+CMD ["./graphql-api"]
