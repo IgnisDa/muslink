@@ -25,18 +25,13 @@ struct AppConfig {
 #[derive(Debug, Default)]
 struct Reminder;
 
-async fn schedule_job(
+async fn background_worker_job(
     _job: Reminder,
     ctx: CronContext<Local>,
     db: Data<DatabaseConnection>,
 ) -> Result<(), Error> {
     tracing::info!("Performing job at: {}", ctx.get_timestamp());
-    let unrated = TelegramBotMusicShareReaction::find()
-        .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
-        .all(&*db)
-        .await
-        .ok();
-    dbg!(&unrated);
+    rate_unrated_reactions(&*db).await?;
     Ok(())
 }
 
@@ -77,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Schedule::from_str("0 * * * * *").unwrap(),
                     Local,
                 ))
-                .build_fn(schedule_job),
+                .build_fn(background_worker_job),
         )
         .run();
 
@@ -85,5 +80,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = join!(worker);
     tracing::info!("Background worker finished");
 
+    Ok(())
+}
+
+async fn rate_unrated_reactions(db: &DatabaseConnection) -> Result<(), Error> {
+    let unrated = TelegramBotMusicShareReaction::find()
+        .filter(telegram_bot_music_share_reaction::Column::LlmSentimentAnalysis.is_null())
+        .all(db)
+        .await
+        .ok();
+    dbg!(&unrated);
     Ok(())
 }
