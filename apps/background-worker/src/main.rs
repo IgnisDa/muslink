@@ -20,6 +20,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct AppConfig {
     #[setting(validate = not_empty, env = "DATABASE_URL")]
     database_url: String,
+    #[setting(validate = not_empty, env = "OPEN_ROUTER_API_KEY")]
+    open_router_api_key: String,
 }
 
 #[derive(Debug, Default)]
