@@ -20,7 +20,7 @@ pub enum Relation {
         belongs_to = "super::music_link::Entity",
         from = "Column::MusicLinkId",
         to = "super::music_link::Column::Id",
-        on_update = "NoAction",
+        on_update = "Cascade",
         on_delete = "Cascade"
     )]
     MusicLink,
@@ -28,7 +28,7 @@ pub enum Relation {
         belongs_to = "super::telegram_bot_user::Entity",
         from = "Column::TelegramBotUserId",
         to = "super::telegram_bot_user::Column::Id",
-        on_update = "NoAction",
+        on_update = "Cascade",
         on_delete = "Cascade"
     )]
     TelegramBotUser,

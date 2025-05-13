@@ -3,4 +3,5 @@
 pub use super::music_link::Entity as MusicLink;
 pub use super::telegram_bot_channel::Entity as TelegramBotChannel;
 pub use super::telegram_bot_music_share::Entity as TelegramBotMusicShare;
+pub use super::telegram_bot_music_share_reaction::Entity as TelegramBotMusicShareReaction;
 pub use super::telegram_bot_user::Entity as TelegramBotUser;
