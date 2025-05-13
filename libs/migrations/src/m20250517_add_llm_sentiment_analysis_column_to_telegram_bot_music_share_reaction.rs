@@ -7,6 +7,7 @@ pub struct Migration;
 pub enum TelegramBotMusicShareReaction {
     Table,
     LlmSentimentAnalysis,
+    LlmSentimentAnalysisCompletedAt,
 }
 
 #[async_trait::async_trait]
@@ -18,6 +19,12 @@ impl MigrationTrait for Migration {
                     .table(TelegramBotMusicShareReaction::Table)
                     .add_column(
                         ColumnDef::new(TelegramBotMusicShareReaction::LlmSentimentAnalysis).text(),
+                    )
+                    .add_column(
+                        ColumnDef::new(
+                            TelegramBotMusicShareReaction::LlmSentimentAnalysisCompletedAt,
+                        )
+                        .timestamp_with_time_zone(),
                     )
                     .to_owned(),
             )
