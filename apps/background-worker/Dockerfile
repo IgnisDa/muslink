@@ -3,7 +3,7 @@ FROM rust:1.85.0-slim-bullseye AS builder
 WORKDIR /usr/src/app
 COPY . .
 
-RUN cargo build --release
+RUN cargo build --release --bin background-worker
 
 FROM debian:bullseye-slim
 
