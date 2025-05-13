@@ -10,6 +10,7 @@ chrono = { workspace = true }
 dotenvy = { workspace = true }
 entities = { path = "../../libs/entities" }
 migrations = { path = "../../libs/migrations" }
+openai-api-rs = { workspace = true }
 schematic = { workspace = true }
 serde = { workspace = true }
 sea-orm = { workspace = true }
