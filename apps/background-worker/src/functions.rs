@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use apalis::prelude::Error;
+use chrono::Utc;
 use entities::{
     prelude::TelegramBotMusicShareReaction,
     telegram_bot_music_share_reaction::{self, SentimentResponseMood},
@@ -9,7 +10,7 @@ use openai_api_rs::v1::{
     api::OpenAIClient,
     chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
 };
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
+use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -100,5 +101,20 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         }
     };
     tracing::info!("Parsed: {parsed:#?}");
+    for sentiment in parsed.response {
+        let Ok(updated) = TelegramBotMusicShareReaction::update_many()
+            .filter(telegram_bot_music_share_reaction::Column::Id.eq(sentiment.id))
+            .set(telegram_bot_music_share_reaction::ActiveModel {
+                llm_sentiment_analysis: ActiveValue::Set(Some(sentiment.sentiment)),
+                llm_sentiment_analysis_completed_at: ActiveValue::Set(Some(Utc::now())),
+                ..Default::default()
+            })
+            .exec(&state.db)
+            .await
+        else {
+            return Err(Error::Failed(Arc::new("Failed to update reaction".into())));
+        };
+        tracing::info!("Updated reaction: {updated:?}");
+    }
     Ok(())
 }
