@@ -96,7 +96,7 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         Ok(val) => val,
         Err(e) => {
             return Err(Error::Failed(Arc::new(
-                format!("Failed to parse response from OpenAI: {}", e).into(),
+                format!("Error: {}, Text: {}", e, response_text).into(),
             )));
         }
     };
