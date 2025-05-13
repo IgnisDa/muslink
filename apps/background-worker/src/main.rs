@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use apalis::{
-    layers::WorkerBuilderExt,
+    layers::{WorkerBuilderExt, retry::RetryPolicy},
     prelude::{Data, Error, Monitor, WorkerBuilder, WorkerFactoryFn},
 };
 use apalis_cron::{CronContext, CronStream, Schedule};
@@ -32,7 +32,7 @@ struct AppState {
     db: DatabaseConnection,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 struct Reminder;
 
 async fn background_worker_job(
@@ -86,6 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             WorkerBuilder::new("background-worker-job")
                 .enable_tracing()
                 .layer(LoadShedLayer::new())
+                .retry(RetryPolicy::retries(5))
                 .catch_panic()
                 .data(state)
                 .backend(CronStream::new_with_timezone(

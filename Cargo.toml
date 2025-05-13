@@ -11,7 +11,7 @@ resolver = "2"
 
 [workspace.dependencies]
 anyhow = "=1.0.98"
-apalis = { version = "=0.7.1", features = ["catch-panic"] }
+apalis = { version = "=0.7.1", features = ["catch-panic", "retry"] }
 apalis-cron = "=0.7.1"
 async-graphql = "=7.0.16"
 async-graphql-axum = "=7.0.16"
