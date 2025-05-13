@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let worker = Monitor::new()
         .register(
             WorkerBuilder::new("background-worker-job")
-                .retry(RetryPolicy::retries(5))
+                .retry(RetryPolicy::retries(3))
                 .enable_tracing()
                 .catch_panic()
                 .data(state)
