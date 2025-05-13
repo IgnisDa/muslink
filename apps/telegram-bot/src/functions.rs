@@ -3,7 +3,8 @@ use std::{collections::HashSet, sync::Arc};
 use convert_case::{Case, Casing};
 use entities::{
     prelude::{TelegramBotChannel, TelegramBotMusicShare, TelegramBotUser},
-    telegram_bot_channel, telegram_bot_music_share, telegram_bot_user,
+    telegram_bot_channel, telegram_bot_music_share, telegram_bot_music_share_reaction,
+    telegram_bot_user,
 };
 use regex::Regex;
 use sea_orm::{
@@ -182,14 +183,13 @@ pub async fn after_process_message(
     )
     .await?;
     for music_link_id in music_link_ids {
-        let to_insert: telegram_bot_music_share::ActiveModel =
-            telegram_bot_music_share::ActiveModel {
-                music_link_id: Set(music_link_id),
-                telegram_bot_user_id: Set(user.id),
-                sent_telegram_message_id: Set(sent_message.id.0.try_into().unwrap()),
-                received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
-                ..Default::default()
-            };
+        let to_insert = telegram_bot_music_share::ActiveModel {
+            music_link_id: Set(music_link_id),
+            telegram_bot_user_id: Set(user.id),
+            sent_telegram_message_id: Set(sent_message.id.0.try_into().unwrap()),
+            received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
+            ..Default::default()
+        };
         to_insert.insert(db).await?;
     }
     Ok(())
@@ -199,6 +199,7 @@ async fn process_reaction(
     text: String,
     db: &DatabaseConnection,
     reply_to_message_id: i32,
+    reaction_text_message_id: Option<i64>,
 ) -> Result<(), DbErr> {
     if text.is_empty() {
         tracing::warn!("No text found in reaction");
@@ -208,7 +209,15 @@ async fn process_reaction(
         .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message_id))
         .all(db)
         .await?;
-    dbg!(&linked_shares);
+    for share in linked_shares {
+        let to_insert = telegram_bot_music_share_reaction::ActiveModel {
+            reaction_text: Set(text.clone()),
+            telegram_bot_music_share_id: Set(share.id),
+            telegram_message_id: Set(reaction_text_message_id),
+            ..Default::default()
+        };
+        to_insert.insert(db).await?;
+    }
     Ok(())
 }
 
@@ -224,6 +233,7 @@ pub async fn process_text_reaction(
         message.text().unwrap_or_default().to_string(),
         db,
         reply_to_message.id.0,
+        Some(message.id.0.try_into().unwrap()),
     )
     .await?;
     Ok(())
@@ -239,6 +249,6 @@ pub async fn process_emoji_reaction(
         .filter_map(|t| t.emoji().cloned())
         .collect::<Vec<String>>()
         .join(",");
-    process_reaction(new_reaction, db, reaction.message_id.0).await?;
+    process_reaction(new_reaction, db, reaction.message_id.0, None).await?;
     Ok(())
 }
