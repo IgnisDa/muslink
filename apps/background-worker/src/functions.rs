@@ -44,6 +44,9 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         )));
     };
     tracing::info!("Found {} unrated reactions", unrated.len());
+    if unrated.is_empty() {
+        return Ok(());
+    }
     let Ok(mut client) = OpenAIClient::builder()
         .with_endpoint("https://generativelanguage.googleapis.com/v1beta/openai")
         .with_api_key(state.config.llm_api_token.clone())
