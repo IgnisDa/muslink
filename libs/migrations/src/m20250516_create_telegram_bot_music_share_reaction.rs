@@ -1,6 +1,9 @@
 use sea_orm_migration::prelude::*;
 
-use crate::m20250515_create_telegram_bot_music_share::TelegramBotMusicShare;
+use crate::{
+    m20250513_create_telegram_bot_user::TelegramBotUser,
+    m20250515_create_telegram_bot_music_share::TelegramBotMusicShare,
+};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -11,6 +14,7 @@ pub enum TelegramBotMusicShareReaction {
     Table,
     CreatedAt,
     ReactionText,
+    TelegramBotUserId,
     TelegramMessageId,
     TelegramBotMusicShareId,
 }
@@ -42,6 +46,11 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(
+                        ColumnDef::new(TelegramBotMusicShareReaction::TelegramBotUserId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
                         ColumnDef::new(TelegramBotMusicShareReaction::TelegramMessageId)
                             .big_integer(),
                     )
@@ -49,6 +58,17 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(TelegramBotMusicShareReaction::TelegramBotMusicShareId)
                             .uuid()
                             .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-telegram_bot_music_share_reaction-telegram_bot_user_id")
+                            .from(
+                                TelegramBotMusicShareReaction::Table,
+                                TelegramBotMusicShareReaction::TelegramBotUserId,
+                            )
+                            .to(TelegramBotUser::Table, TelegramBotUser::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .foreign_key(
                         ForeignKey::create()

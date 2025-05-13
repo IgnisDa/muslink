@@ -199,7 +199,9 @@ pub async fn after_process_message(
 
 async fn process_reaction(
     text: String,
+    user_id: i64,
     db: &DatabaseConnection,
+    telegram_channel_id: i64,
     reply_to_message_id: i32,
     reaction_text_message_id: Option<i64>,
 ) -> Result<(), DbErr> {
@@ -207,6 +209,7 @@ async fn process_reaction(
         tracing::warn!("No text found in reaction");
         return Ok(());
     }
+    let user = find_or_create_telegram_user(user_id, db, telegram_channel_id).await?;
     let linked_shares = TelegramBotMusicShare::find()
         .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message_id))
         .all(db)
@@ -214,6 +217,7 @@ async fn process_reaction(
     for share in linked_shares {
         let to_insert = telegram_bot_music_share_reaction::ActiveModel {
             reaction_text: ActiveValue::Set(text.clone()),
+            telegram_bot_user_id: ActiveValue::Set(user.id),
             telegram_bot_music_share_id: ActiveValue::Set(share.id),
             telegram_message_id: ActiveValue::Set(reaction_text_message_id),
             ..Default::default()
@@ -233,7 +237,9 @@ pub async fn process_text_reaction(
     };
     process_reaction(
         message.text().unwrap_or_default().to_string(),
+        message.from.as_ref().unwrap().id.0.try_into().unwrap(),
         db,
+        message.chat.id.0,
         reply_to_message.id.0,
         Some(message.id.0.try_into().unwrap()),
     )
@@ -251,6 +257,14 @@ pub async fn process_emoji_reaction(
         .filter_map(|t| t.emoji().cloned())
         .collect::<Vec<String>>()
         .join(",");
-    process_reaction(new_reaction, db, reaction.message_id.0, None).await?;
+    process_reaction(
+        new_reaction,
+        reaction.actor.user().unwrap().id.0.try_into().unwrap(),
+        db,
+        reaction.chat.id.0,
+        reaction.message_id.0,
+        None,
+    )
+    .await?;
     Ok(())
 }
