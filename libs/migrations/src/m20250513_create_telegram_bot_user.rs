@@ -30,6 +30,12 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(
+                        ColumnDef::new(TelegramBotUser::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
                         ColumnDef::new(TelegramBotUser::TelegramUserId)
                             .big_integer()
                             .not_null(),
@@ -38,12 +44,6 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(TelegramBotUser::TelegramBotChannelId)
                             .uuid()
                             .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(TelegramBotUser::CreatedAt)
-                            .timestamp_with_time_zone()
-                            .not_null()
-                            .default(Expr::current_timestamp()),
                     )
                     .foreign_key(
                         ForeignKey::create()

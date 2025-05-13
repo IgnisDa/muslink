@@ -37,11 +37,6 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotMusicShareReaction::TelegramBotMusicShareId)
-                            .uuid()
-                            .not_null(),
-                    )
-                    .col(
                         ColumnDef::new(TelegramBotMusicShareReaction::ReactionText)
                             .text()
                             .not_null(),
@@ -49,6 +44,11 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(TelegramBotMusicShareReaction::TelegramMessageId)
                             .big_integer(),
+                    )
+                    .col(
+                        ColumnDef::new(TelegramBotMusicShareReaction::TelegramBotMusicShareId)
+                            .uuid()
+                            .not_null(),
                     )
                     .foreign_key(
                         ForeignKey::create()
