@@ -37,7 +37,6 @@ async fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
-    tracing::info!("Starting Muslink GraphQL API");
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -45,6 +44,7 @@ async fn main() -> Result<()> {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+    tracing::info!("Starting Muslink GraphQL API");
 
     let config = ConfigLoader::<AppConfig>::new().load()?.config;
     tracing::info!("Configuration loaded successfully");

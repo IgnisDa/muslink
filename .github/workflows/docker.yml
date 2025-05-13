@@ -55,6 +55,9 @@ jobs:
           - name: telegram-bot
             dockerfile: apps/telegram-bot/Dockerfile
             image: ${{ github.repository }}-telegram-bot
+          - name: background-worker
+            dockerfile: apps/background-worker/Dockerfile
+            image: ${{ github.repository }}-background-worker
     permissions:
       contents: read
       packages: write
