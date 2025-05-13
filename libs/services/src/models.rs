@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use nest_struct::nest_struct;
+use sea_orm::prelude::Uuid;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -25,6 +26,7 @@ pub struct MusicLinkData {
 
 #[derive(Debug)]
 pub struct MusicLinkResponse {
+    pub id: Uuid,
     pub found: u8,
     pub collected_links: Vec<MusicLinkData>,
 }

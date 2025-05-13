@@ -22,11 +22,19 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     TelegramBotChannel,
+    #[sea_orm(has_many = "super::telegram_bot_music_share::Entity")]
+    TelegramBotMusicShare,
 }
 
 impl Related<super::telegram_bot_channel::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::TelegramBotChannel.def()
+    }
+}
+
+impl Related<super::telegram_bot_music_share::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TelegramBotMusicShare.def()
     }
 }
 

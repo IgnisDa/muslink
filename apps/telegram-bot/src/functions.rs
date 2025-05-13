@@ -2,12 +2,13 @@ use std::{collections::HashSet, sync::Arc};
 
 use convert_case::{Case, Casing};
 use entities::{
-    prelude::{TelegramBotChannel, TelegramBotUser},
-    telegram_bot_channel, telegram_bot_user,
+    prelude::{TelegramBotChannel, TelegramBotMusicShare, TelegramBotUser},
+    telegram_bot_channel, telegram_bot_music_share, telegram_bot_user,
 };
 use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set,
+    prelude::Uuid,
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
@@ -55,18 +56,33 @@ async fn find_or_create_telegram_user(
 pub enum ProcessMessageResponse {
     NoUrlDetected,
     HasUrlNoMusicLinksFound,
-    HasUrlMusicLinksFound(String),
+    HasUrlMusicLinksFound {
+        text: String,
+        music_link_ids: Vec<Uuid>,
+    },
 }
 
-pub async fn process_message(
+fn get_regex_for_url() -> Regex {
+    Regex::new(r"https?://[^\s]+").unwrap()
+}
+
+pub fn has_url_in_message(message: Message) -> bool {
+    let url_regex = get_regex_for_url();
+    url_regex.find(message.text().unwrap_or_default()).is_some()
+}
+
+pub fn is_reply_to_message(message: Message) -> bool {
+    message.reply_to_message().is_some()
+}
+
+pub async fn process_music_share(
     text: String,
     msg: &Message,
     db: Arc<DatabaseConnection>,
 ) -> Result<ProcessMessageResponse, DbErr> {
     tracing::debug!("Processing message: {}", text);
 
-    let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
-    let urls: HashSet<_> = url_regex
+    let urls: HashSet<_> = get_regex_for_url()
         .find_iter(&text)
         .map(|m| m.as_str().to_string())
         .collect();
@@ -81,6 +97,7 @@ pub async fn process_message(
     let music_service = MusicLinkService::new().await;
     tracing::debug!("MusicLinkService initialized");
 
+    let mut music_link_ids = Vec::new();
     for url in urls {
         tracing::debug!("Processing URL: {}", url);
         let service_input = MusicLinkInput {
@@ -98,6 +115,8 @@ pub async fn process_message(
                 continue;
             }
         };
+
+        music_link_ids.push(result.id);
 
         if result.found > 0 {
             tracing::debug!(
@@ -131,7 +150,6 @@ pub async fn process_message(
     }
 
     if let Some(user) = &msg.from {
-        find_or_create_telegram_user(user.id.0.try_into().unwrap(), &db, msg.chat.id.0).await?;
         let username = user
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
@@ -140,5 +158,54 @@ pub async fn process_message(
     }
 
     tracing::debug!("Returning response with {} characters", response.len());
-    Ok(ProcessMessageResponse::HasUrlMusicLinksFound(response))
+    Ok(ProcessMessageResponse::HasUrlMusicLinksFound {
+        music_link_ids,
+        text: response,
+    })
+}
+
+pub async fn after_process_message(
+    db: &DatabaseConnection,
+    sent_message: &Message,
+    music_link_ids: Vec<Uuid>,
+    received_message: &Message,
+) -> Result<(), DbErr> {
+    let Some(user) = &received_message.from else {
+        tracing::warn!("No user found in message");
+        return Ok(());
+    };
+    tracing::debug!("Processing music link ids: {:?}", music_link_ids);
+    let user = find_or_create_telegram_user(
+        user.id.0.try_into().unwrap(),
+        db,
+        received_message.chat.id.0,
+    )
+    .await?;
+    for music_link_id in music_link_ids {
+        let to_insert: telegram_bot_music_share::ActiveModel =
+            telegram_bot_music_share::ActiveModel {
+                music_link_id: Set(music_link_id),
+                telegram_bot_user_id: Set(user.id),
+                sent_telegram_message_id: Set(sent_message.id.0.try_into().unwrap()),
+                received_telegram_message_id: Set(received_message.id.0.try_into().unwrap()),
+                ..Default::default()
+            };
+        to_insert.insert(db).await?;
+    }
+    Ok(())
+}
+
+pub async fn process_text_reaction(
+    message: &Message,
+    db: &DatabaseConnection,
+) -> Result<(), DbErr> {
+    let Some(reply_to_message) = message.reply_to_message() else {
+        tracing::warn!("No reply to message found");
+        return Ok(());
+    };
+    let shares_linked = TelegramBotMusicShare::find()
+        .filter(telegram_bot_music_share::Column::SentTelegramMessageId.eq(reply_to_message.id.0))
+        .all(db)
+        .await?;
+    Ok(())
 }

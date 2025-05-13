@@ -6,7 +6,7 @@ use super::m20250512_create_telegram_bot_channel::TelegramBotChannel;
 pub struct Migration;
 
 #[derive(Iden)]
-enum TelegramBotUser {
+pub enum TelegramBotUser {
     Id,
     Table,
     CreatedAt,
@@ -53,7 +53,8 @@ impl MigrationTrait for Migration {
                                 TelegramBotUser::TelegramBotChannelId,
                             )
                             .to(TelegramBotChannel::Table, TelegramBotChannel::Id)
-                            .on_delete(ForeignKeyAction::Cascade),
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
             )

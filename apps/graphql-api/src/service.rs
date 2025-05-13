@@ -9,7 +9,7 @@ pub struct Service {
 
 impl Service {
     pub async fn new(db: DatabaseConnection) -> Self {
-        tracing::debug!("Initializing backend service");
+        tracing::debug!("Initializing GraphQL API service");
         Self { db }
     }
 

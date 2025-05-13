@@ -8,6 +8,6 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 
 WORKDIR /usr/local/bin
-COPY --from=builder /usr/src/app/target/release/telegram-bot .
+COPY --from=builder /usr/src/app/target/release/graphql-api .
 
-CMD ["./telegram-bot"]
+CMD ["./graphql-api"]

@@ -1,13 +1,20 @@
 use std::sync::Arc;
 
-use functions::{ProcessMessageResponse, process_message};
+use functions::{
+    ProcessMessageResponse, after_process_message, has_url_in_message, is_reply_to_message,
+    process_music_share, process_text_reaction,
+};
 use schematic::{Config, ConfigLoader, validate::not_empty};
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
 use teloxide::{
-    prelude::*,
-    types::{ParseMode, ReactionType},
+    Bot,
+    dispatching::UpdateFilterExt,
+    payloads::{SendMessageSetters, SetMessageReactionSetters},
+    prelude::{Dispatcher, Requester},
+    respond,
+    types::{Message, ParseMode, ReactionType, Update},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -50,54 +57,66 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bot = Bot::new(config.teloxide_token.clone());
 
-    let handler = Update::filter_message().endpoint(
-        |bot: Bot, db: Arc<DatabaseConnection>, msg: Message| async move {
-            let user_name = msg
-                .from
-                .as_ref()
-                .map(|user| user.full_name())
-                .unwrap_or_else(|| "Unknown".to_string());
-            let chat_id = msg.chat.id;
+    let music_share_handler = Update::filter_message()
+        .filter(has_url_in_message)
+        .endpoint(
+            |bot: Bot, msg: Message, db: Arc<DatabaseConnection>| async move {
+                let chat_id = msg.chat.id;
+                let text = msg.text().unwrap_or_default();
 
-            tracing::info!("Received message from {} in chat {}", user_name, chat_id);
-            let text = msg.text().unwrap_or_default();
+                match process_music_share(text.to_string(), &msg, db.clone()).await {
+                    Err(e) => {
+                        tracing::error!("Failed to process message: {}", e);
+                    }
+                    Ok(response) => match response {
+                        ProcessMessageResponse::NoUrlDetected => {
+                            tracing::debug!("No URL detected in message, ignoring");
+                        }
+                        ProcessMessageResponse::HasUrlNoMusicLinksFound => {
+                            tracing::debug!(
+                                "URL detected but no music links found, reacting with sad emoji"
+                            );
+                            bot.set_message_reaction(msg.chat.id, msg.id)
+                                .reaction(vec![ReactionType::Emoji {
+                                    emoji: "😢".to_string(),
+                                }])
+                                .await?;
+                        }
+                        ProcessMessageResponse::HasUrlMusicLinksFound {
+                            text,
+                            music_link_ids,
+                        } => {
+                            tracing::info!("Sending music link response to chat {}", chat_id);
+                            let sent = bot
+                                .send_message(msg.chat.id, text)
+                                .parse_mode(ParseMode::Html)
+                                .await?;
+                            tracing::debug!("Deleting original message");
+                            bot.delete_message(msg.chat.id, msg.id).await?;
+                            after_process_message(&db, &sent, music_link_ids, &msg)
+                                .await
+                                .ok();
+                        }
+                    },
+                };
 
-            match process_message(text.to_string(), &msg, db.clone()).await {
-                Err(e) => {
-                    tracing::error!("Failed to process message: {}", e);
-                }
-                Ok(response) => match response {
-                    ProcessMessageResponse::NoUrlDetected => {
-                        tracing::debug!("No URL detected in message, ignoring");
-                        return Ok(());
-                    }
-                    ProcessMessageResponse::HasUrlNoMusicLinksFound => {
-                        tracing::debug!(
-                            "URL detected but no music links found, reacting with sad emoji"
-                        );
-                        bot.set_message_reaction(msg.chat.id, msg.id)
-                            .reaction(vec![ReactionType::Emoji {
-                                emoji: "😢".to_string(),
-                            }])
-                            .await?;
-                        return Ok(());
-                    }
-                    ProcessMessageResponse::HasUrlMusicLinksFound(response) => {
-                        tracing::info!("Sending music link response to chat {}", chat_id);
-                        bot.send_message(msg.chat.id, response)
-                            .parse_mode(ParseMode::Html)
-                            .await?;
-                        tracing::debug!("Deleting original message");
-                        bot.delete_message(msg.chat.id, msg.id).await?;
-                        return Ok(());
-                    }
-                },
-            };
+                respond(())
+            },
+        );
+
+    let text_reaction_handler = Update::filter_message()
+        .filter(is_reply_to_message)
+        .endpoint(|msg: Message, db: Arc<DatabaseConnection>| async move {
+            process_text_reaction(&msg, &db).await.ok();
             respond(())
-        },
-    );
+        });
 
     tracing::info!("Starting Telegram bot dispatcher");
+
+    let handler = dptree::entry()
+        .branch(music_share_handler)
+        .branch(text_reaction_handler);
+
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(db)])
         .enable_ctrlc_handler()

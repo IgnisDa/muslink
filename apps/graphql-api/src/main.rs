@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     dotenvy::dotenv()?;
 
-    tracing::info!("Starting Muslink Backend API");
+    tracing::info!("Starting Muslink GraphQL API");
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()

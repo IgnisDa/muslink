@@ -1,10 +1,10 @@
 [workspace]
 members = [
-  "apps/backend",
-  "apps/telegram-bot",
   "libs/entities",
   "libs/migrations",
   "libs/services",
+  "apps/graphql-api",
+  "apps/telegram-bot",
 ]
 resolver = "2"
 
