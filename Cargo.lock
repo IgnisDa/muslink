@@ -405,6 +405,7 @@ dependencies = [
  "apalis-cron",
  "chrono",
  "dotenvy",
+ "migrations",
  "schematic",
  "sea-orm",
  "serde",
