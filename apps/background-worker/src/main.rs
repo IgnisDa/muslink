@@ -52,8 +52,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::registry()
         .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| format!("{}=debug", env!("CARGO_CRATE_NAME")).into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                format!(
+                    "{}=debug,apalis::layers::tracing::on_failure=debug",
+                    env!("CARGO_CRATE_NAME")
+                )
+                .into()
+            }),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -82,12 +87,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let worker = Monitor::new()
         .register(
             WorkerBuilder::new("background-worker-job")
-                .enable_tracing()
                 .retry(RetryPolicy::retries(5))
+                .enable_tracing()
                 .catch_panic()
                 .data(state)
                 .backend(CronStream::new_with_timezone(
-                    Schedule::from_str("0 */5 * * * *").unwrap(),
+                    Schedule::from_str("1 * * * * *").unwrap(),
                     Local,
                 ))
                 .build_fn(background_worker_job),
