@@ -3,6 +3,7 @@ members = [
   "libs/entities",
   "libs/migrations",
   "libs/services",
+  "apps/background-worker",
   "apps/graphql-api",
   "apps/telegram-bot",
 ]
