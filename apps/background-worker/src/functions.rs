@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use apalis::prelude::Error;
 use entities::{
     prelude::TelegramBotMusicShareReaction,
@@ -35,8 +37,9 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         .all(&state.db)
         .await
     else {
-        tracing::error!("Failed to fetch unrated reactions");
-        return Ok(());
+        return Err(Error::Failed(Arc::new(
+            "Failed to fetch unrated reactions".into(),
+        )));
     };
     tracing::info!("Found {} unrated reactions", unrated.len());
     let Ok(mut client) = OpenAIClient::builder()
@@ -44,8 +47,9 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
         .with_api_key(state.config.open_router_api_key.clone())
         .build()
     else {
-        tracing::error!("Failed to build OpenAI client");
-        return Ok(());
+        return Err(Error::Failed(Arc::new(
+            "Failed to build OpenAI client".into(),
+        )));
     };
     let input = unrated
         .into_iter()
@@ -78,19 +82,22 @@ pub async fn rate_unrated_reactions(state: &AppState) -> Result<(), Error> {
     let result = match client.chat_completion(req).await {
         Ok(result) => result,
         Err(e) => {
-            tracing::error!("Failed to send request to OpenAI: {}", e);
-            return Ok(());
+            return Err(Error::Failed(Arc::new(
+                format!("Failed to send request to OpenAI: {}", e).into(),
+            )));
         }
     };
     let Some(response_text) = result.choices[0].message.content.as_ref() else {
-        tracing::error!("Failed to get response from OpenAI");
-        return Ok(());
+        return Err(Error::Failed(Arc::new(
+            "Failed to get response from OpenAI".into(),
+        )));
     };
     let parsed = match serde_json::from_str::<MusicSentimentResponse>(response_text) {
         Ok(val) => val,
         Err(e) => {
-            tracing::error!("Response error: {}. Text: {}", e, response_text);
-            return Ok(());
+            return Err(Error::Failed(Arc::new(
+                format!("Failed to parse response from OpenAI: {}", e).into(),
+            )));
         }
     };
     dbg!(&parsed);
