@@ -10,6 +10,7 @@ pub struct Model {
     pub music_link_id: Uuid,
     pub created_at: DateTimeUtc,
     pub telegram_bot_user_id: Uuid,
+    pub sent_telegram_message_id: i64,
     pub received_telegram_message_id: i64,
 }
 

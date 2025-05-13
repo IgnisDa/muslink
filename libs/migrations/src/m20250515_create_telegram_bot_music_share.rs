@@ -14,6 +14,7 @@ pub enum TelegramBotMusicShare {
     CreatedAt,
     MusicLinkId,
     TelegramBotUserId,
+    SentTelegramMessageId,
     ReceivedTelegramMessageId,
 }
 
@@ -44,13 +45,18 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotMusicShare::ReceivedTelegramMessageId)
+                        ColumnDef::new(TelegramBotMusicShare::TelegramBotUserId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TelegramBotMusicShare::SentTelegramMessageId)
                             .big_integer()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(TelegramBotMusicShare::TelegramBotUserId)
-                            .uuid()
+                        ColumnDef::new(TelegramBotMusicShare::ReceivedTelegramMessageId)
+                            .big_integer()
                             .not_null(),
                     )
                     .foreign_key(
@@ -75,6 +81,15 @@ impl MigrationTrait for Migration {
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx-telegram_bot_music_share-sent_telegram_message_id")
+                    .table(TelegramBotMusicShare::Table)
+                    .col(TelegramBotMusicShare::SentTelegramMessageId)
                     .to_owned(),
             )
             .await?;
