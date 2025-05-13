@@ -8,8 +8,12 @@ use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use serde::Serialize;
 use teloxide::{
-    prelude::*,
-    types::{ParseMode, ReactionType},
+    Bot,
+    dispatching::UpdateFilterExt,
+    payloads::{SendMessageSetters, SetMessageReactionSetters},
+    prelude::{Dispatcher, Requester},
+    respond,
+    types::{Message, ParseMode, ReactionType, Update},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -52,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bot = Bot::new(config.teloxide_token.clone());
 
-    let music_share_handler = Update::filter_message()
+    let handler = Update::filter_message()
         .filter(has_url_in_message)
         .endpoint(
             |bot: Bot, msg: Message, db: Arc<DatabaseConnection>| async move {
@@ -97,7 +101,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     tracing::info!("Starting Telegram bot dispatcher");
-    Dispatcher::builder(bot, music_share_handler)
+
+    Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![Arc::new(db)])
         .enable_ctrlc_handler()
         .build()

@@ -66,7 +66,7 @@ fn get_regex_for_url() -> Regex {
     Regex::new(r"https?://[^\s]+").unwrap()
 }
 
-pub fn has_url_in_message(message: &Message) -> bool {
+pub fn has_url_in_message(message: Message) -> bool {
     let url_regex = get_regex_for_url();
     url_regex.find(message.text().unwrap_or_default()).is_some()
 }
