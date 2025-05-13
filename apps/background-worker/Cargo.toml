@@ -13,6 +13,7 @@ migrations = { path = "../../libs/migrations" }
 openai-api-rs = { workspace = true }
 schematic = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 sea-orm = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }
