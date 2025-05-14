@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use nest_struct::nest_struct;
-use sea_orm::prelude::Uuid;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub enum MusicPlatform {

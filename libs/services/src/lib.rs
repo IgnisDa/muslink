@@ -4,11 +4,11 @@ use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter,
-    prelude::{Expr, Uuid},
+    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryFilter, prelude::Expr,
     sea_query::PgFunc,
 };
 use strum::IntoEnumIterator;
+use uuid::Uuid;
 
 mod models;
 mod utils;
