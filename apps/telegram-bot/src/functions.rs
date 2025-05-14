@@ -9,14 +9,14 @@ use entities::{
 };
 use regex::Regex;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbErr, EntityTrait,
-    QueryFilter, prelude::Uuid,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     types::{Message, MessageReactionUpdated},
     utils::html::{link, user_mention},
 };
+use uuid::Uuid;
 
 async fn find_or_create_telegram_user(
     user_id: i64,
