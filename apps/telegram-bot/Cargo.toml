@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 convert_case = { workspace = true }
+chrono = { workspace = true }
 dotenvy = { workspace = true }
 dptree = { workspace = true }
 entities = { path = "../../libs/entities" }
