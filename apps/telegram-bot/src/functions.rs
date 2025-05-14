@@ -1,5 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
+use chrono::Utc;
 use convert_case::{Case, Casing};
 use entities::{
     prelude::{TelegramBotChannel, TelegramBotMusicShare, TelegramBotUser},
@@ -8,14 +9,14 @@ use entities::{
 };
 use regex::Regex;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbErr, EntityTrait,
-    QueryFilter, prelude::Uuid,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
 };
 use services::{MusicLinkInput, MusicLinkService};
 use teloxide::{
     types::{Message, MessageReactionUpdated},
     utils::html::{link, user_mention},
 };
+use uuid::Uuid;
 
 async fn find_or_create_telegram_user(
     user_id: i64,
@@ -28,6 +29,9 @@ async fn find_or_create_telegram_user(
             .one(db)
             .await?;
         if let Some(channel) = existing_channel {
+            let mut updated: telegram_bot_channel::ActiveModel = channel.clone().into();
+            updated.last_interacted_at = ActiveValue::Set(Utc::now());
+            updated.update(db).await?;
             break 'chan channel;
         }
         let new_channel = telegram_bot_channel::ActiveModel {
@@ -43,6 +47,9 @@ async fn find_or_create_telegram_user(
         .one(db)
         .await?;
     if let Some(user) = user {
+        let mut update: telegram_bot_user::ActiveModel = user.clone().into();
+        update.last_interacted_at = ActiveValue::Set(Utc::now());
+        update.update(db).await?;
         return Ok(user);
     }
     let new_user = telegram_bot_user::ActiveModel {
