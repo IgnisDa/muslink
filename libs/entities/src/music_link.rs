@@ -11,6 +11,7 @@ pub struct Model {
     pub created_at: DateTimeUtc,
     pub spotify_link: Option<String>,
     pub equivalent_links: Vec<String>,
+    pub last_interacted_at: DateTimeUtc,
     pub apple_music_link: Option<String>,
     pub youtube_music_link: Option<String>,
 }

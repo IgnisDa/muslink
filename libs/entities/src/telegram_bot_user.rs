@@ -10,6 +10,7 @@ pub struct Model {
     pub telegram_user_id: i64,
     pub created_at: DateTimeUtc,
     pub telegram_bot_channel_id: Uuid,
+    pub last_interacted_at: DateTimeUtc,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
