@@ -2,6 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 use serde::Deserialize;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, EnumIter, DeriveActiveEnum)]
 #[serde(rename_all = "lowercase")]
