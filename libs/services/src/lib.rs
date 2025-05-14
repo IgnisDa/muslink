@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::Utc;
 use entities::{music_link, prelude::MusicLink};
 use reqwest::{Client, Url};
 use rust_iso3166::{US, from_alpha2};
@@ -66,6 +67,7 @@ impl MusicLinkService {
                 new_links.push(original_link.clone());
                 let mut active: music_link::ActiveModel = already.into();
                 active.equivalent_links = ActiveValue::Set(new_links);
+                active.last_interacted_at = ActiveValue::Set(Utc::now());
                 let updated = active.update(db).await?;
                 return Ok(updated.id);
             }
