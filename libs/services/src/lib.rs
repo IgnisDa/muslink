@@ -36,6 +36,11 @@ impl MusicLinkService {
             .filter(Expr::val(link).eq(PgFunc::any(Expr::col(music_link::Column::AllLinks))))
             .one(db)
             .await?;
+        if let Some(music_link) = &music_link {
+            let mut active: music_link::ActiveModel = music_link.clone().into();
+            active.last_interacted_at = ActiveValue::Set(Utc::now());
+            active.update(db).await?;
+        }
         Ok(music_link)
     }
 
