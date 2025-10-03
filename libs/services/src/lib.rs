@@ -46,9 +46,9 @@ impl MusicLinkService {
 
     async fn save_music_link_to_db(
         &self,
-        original_link: &String,
+        original_link: &str,
         db: &DatabaseConnection,
-        links: &Vec<MusicLinkData>,
+        links: &[MusicLinkData],
     ) -> Result<Uuid> {
         let spotify_link = links
             .iter()
@@ -69,7 +69,7 @@ impl MusicLinkService {
             let already = self.get_music_link_from_db(link, db).await?;
             if let Some(already) = already {
                 let mut new_links = already.equivalent_links.clone();
-                new_links.push(original_link.clone());
+                new_links.push(original_link.to_owned());
                 let mut active: music_link::ActiveModel = already.into();
                 active.equivalent_links = ActiveValue::Set(new_links);
                 active.last_interacted_at = ActiveValue::Set(Utc::now());
@@ -81,7 +81,7 @@ impl MusicLinkService {
             spotify_link: ActiveValue::Set(spotify_link),
             apple_music_link: ActiveValue::Set(apple_music_link),
             youtube_music_link: ActiveValue::Set(youtube_music_link),
-            equivalent_links: ActiveValue::Set(vec![original_link.clone()]),
+            equivalent_links: ActiveValue::Set(vec![original_link.to_owned()]),
             ..Default::default()
         };
         let inserted = to_insert.insert(db).await?;
@@ -148,7 +148,7 @@ impl MusicLinkService {
             .ok();
 
         let mut found = 0;
-        let collected_links = MusicPlatform::iter()
+        let collected_links: Vec<MusicLinkData> = MusicPlatform::iter()
             .map(|platform| {
                 let sl_platform = match platform {
                     MusicPlatform::Spotify => SongLinkPlatform::Spotify,

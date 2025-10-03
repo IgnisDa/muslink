@@ -193,10 +193,8 @@ pub async fn after_process_message(
         let to_insert = telegram_bot_music_share::ActiveModel {
             music_link_id: ActiveValue::Set(music_link_id),
             telegram_bot_user_id: ActiveValue::Set(user.id),
-            sent_telegram_message_id: ActiveValue::Set(sent_message.id.0.try_into().unwrap()),
-            received_telegram_message_id: ActiveValue::Set(
-                received_message.id.0.try_into().unwrap(),
-            ),
+            sent_telegram_message_id: ActiveValue::Set(sent_message.id.0.into()),
+            received_telegram_message_id: ActiveValue::Set(received_message.id.0.into()),
             ..Default::default()
         };
         to_insert.insert(db).await?;
@@ -248,7 +246,7 @@ pub async fn process_text_reaction(
         db,
         message.chat.id.0,
         reply_to_message.id.0,
-        Some(message.id.0.try_into().unwrap()),
+        Some(message.id.0.into()),
     )
     .await?;
     Ok(())
