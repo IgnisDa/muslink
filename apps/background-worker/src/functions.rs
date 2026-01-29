@@ -8,7 +8,9 @@ use entities::{
 };
 use openai_api_rs::v1::{
     api::OpenAIClient,
-    chat_completion::{ChatCompletionMessage, ChatCompletionRequest, Content, MessageRole},
+    chat_completion::{
+        chat_completion::ChatCompletionRequest, ChatCompletionMessage, Content, MessageRole,
+    },
 };
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::Deserialize;

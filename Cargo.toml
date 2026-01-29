@@ -11,47 +11,47 @@ members = [
 
 [workspace.dependencies]
 anyhow = "=1.0.100"
-apalis = { version = "=0.7.3", features = ["catch-panic", "retry"] }
-apalis-cron = "=0.7.3"
-async-graphql = "=7.0.17"
-async-graphql-axum = "=7.0.17"
-axum = "=0.8.6"
-chrono = "=0.4.42"
-convert_case = "=0.8.0"
+apalis = { version = "=0.7.4", features = ["catch-panic", "retry"] }
+apalis-cron = "=0.7.4"
+async-graphql = "=7.2.1"
+async-graphql-axum = "=7.2.1"
+axum = "=0.8.8"
+chrono = "=0.4.43"
+convert_case = "=0.10.0"
 dotenvy = "=0.15.7"
 dptree = "=0.5.1"
-graphql_client = "=0.14.0"
+graphql_client = "=0.16.0"
 nest_struct = "=0.5.5"
-openai-api-rs = { version = "=6.0.12", default-features = false, features = [
+openai-api-rs = { version = "=9.0.1", default-features = false, features = [
   "rustls",
 ] }
-regex = "=1.11.3"
-reqwest = { version = "=0.12.23", default-features = false, features = [
+regex = "=1.12.2"
+reqwest = { version = "=0.13.1", default-features = false, features = [
   "json",
   "stream",
-  "rustls-tls",
+  "rustls",
 ] }
 rust_iso3166 = "=0.1.14"
-schematic = { version = "=0.18.12", features = [
+schematic = { version = "=0.19.4", features = [
   "config",
   "env",
   "validate",
 ], default-features = false }
-sea-orm = { version = "=1.1.16", features = [
+sea-orm = { version = "=1.1.19", features = [
   "sqlx-postgres",
   "runtime-tokio-rustls",
   "with-json",
   "with-time",
 ] }
-sea-orm-migration = "=1.1.16"
+sea-orm-migration = "=1.1.19"
 serde = "=1.0.228"
-serde_json = "=1.0.145"
-strum = { version = "=0.27.1", features = ["derive"] }
+serde_json = "=1.0.149"
+strum = { version = "=0.27.2", features = ["derive"] }
 teloxide = { version = "=0.17.0", default-features = false, features = [
   "ctrlc_handler",
   "rustls",
 ] }
-tokio = { version = "=1.47.1", features = ["full"] }
-tracing = "=0.1.41"
-tracing-subscriber = { version = "=0.3.20", features = ["env-filter"] }
-uuid = "=1.18.1"
+tokio = { version = "=1.49.0", features = ["full"] }
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }
+uuid = "=1.20.0"
