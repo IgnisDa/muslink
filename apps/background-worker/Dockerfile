@@ -7,6 +7,7 @@ RUN cargo build --release --bin background-worker
 
 FROM debian:bullseye-slim
 
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 WORKDIR /usr/local/bin
 COPY --from=builder /usr/src/app/target/release/background-worker .
 
