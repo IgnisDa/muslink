@@ -162,7 +162,15 @@ pub async fn process_music_share(
             .mention()
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
         tracing::debug!("Adding attribution for user: {}", user.full_name());
-        response.push_str(&format!("\n\nPosted by {}", username));
+        let cleaned_text = get_regex_for_url()
+            .replace_all(text.trim(), "[OG LINK]")
+            .into_owned();
+        if !cleaned_text.trim().is_empty() {
+            response.push_str(&format!("\n\nPosted by {}: {}", username, cleaned_text.trim()));
+        } else {
+            tracing::debug!("Only URL contained in the user message")
+            response.push_str(&format!("\n\nPosted by {}", username));
+        }
     }
 
     tracing::debug!("Returning response with {} characters", response.len());
