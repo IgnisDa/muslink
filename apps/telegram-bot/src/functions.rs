@@ -166,9 +166,13 @@ pub async fn process_music_share(
             .replace_all(text.trim(), "[OG LINK]")
             .into_owned();
         if !cleaned_text.trim().is_empty() {
-            response.push_str(&format!("\n\nPosted by {}: {}", username, cleaned_text.trim()));
+            response.push_str(&format!(
+                "\n\nPosted by {}: {}",
+                username,
+                cleaned_text.trim()
+            ));
         } else {
-            tracing::debug!("Only URL contained in the user message")
+            tracing::debug!("Only URL contained in the user message");
             response.push_str(&format!("\n\nPosted by {}", username));
         }
     }
