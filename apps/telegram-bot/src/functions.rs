@@ -163,7 +163,7 @@ pub async fn process_music_share(
             .unwrap_or_else(|| user_mention(user.id, user.full_name().as_str()));
         tracing::debug!("Adding attribution for user: {}", user.full_name());
         let cleaned_text = get_regex_for_url()
-            .replace_all(text.trim(), "[OG LINK]")
+            .replace_all(text.trim(), "")
             .into_owned();
         if !cleaned_text.trim().is_empty() {
             response.push_str(&format!(
